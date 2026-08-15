@@ -1,29 +1,45 @@
 linkrobins-forage:
   admin:
-    settings:
-      token_label: Setup key
-      token_help: Paste the key from your Forage subscription and save. Everything else, including where your search server lives, is filled in for you.
+    key_label: Forage key
+    key_help: >
+      Paste the key from your linkrobins.com dashboard → Forage. That's it —
+      Forage sets up your search server's connection for you and starts indexing
+      your posts. Leave it blank to go back to your forum's own search.
 
-    status:
-      checking: Checking your search server...
+    unconfigured: >
+      Paste your Forage key below to turn on hosted search. Get it from your
+      linkrobins.com dashboard → Forage. Until then your forum keeps using its
+      own search, so nothing is broken in the meantime.
 
-      ok_title: Connected
-      ok_body: Search on this forum is being answered by your search server.
-      ok_body_indexed: Search on this forum is being answered by your search server, which holds {indexed} posts.
-      ok_body_at_limit: Your search server holds {indexed} posts, which is the limit on your plan ({cap}). Newer posts are not being added, so they will not turn up in search. Upgrading your plan raises the limit.
+    connected: >
+      ✓ Connected — your forum's search is being answered by your own search
+      server.
+    connected_indexed: >
+      ✓ Connected — your forum's search is being answered by your own search
+      server, which is holding {indexed} posts.
 
-      provisioning_title: Your search server is still being built
-      provisioning_body: Your key is fine. Setting up a search server takes a minute or two, so this is worth checking again shortly.
-      check_again: Check again
+    provisioning: >
+      Your key is fine, and your search server is still being built. That takes
+      a minute or two after subscribing. Your forum's own search is being used
+      until it's ready.
+    check_again: Check again
 
-      invalid_title: That key was not recognised
-      invalid_body: Check that the key was copied in full, and that your Forage subscription is still active.
+    invalid: >
+      That key wasn't recognized. Check that you copied it in full, and that
+      your Forage subscription is still active. Your forum's own search is being
+      used in the meantime.
 
-      error_title: Could not set up search
-      error_body: Something went wrong while setting up. Your forum's own search is still working, so nothing is broken for your members. Try saving the key again, and if it keeps happening, get in touch.
+    error: >
+      Forage couldn't finish setting up. Your forum's own search is still
+      working, so nothing is broken for your members. Try saving your key again,
+      and get in touch if it keeps happening.
 
-      unconfigured_title: Not set up yet
-      unconfigured_body: Paste your setup key below and save. Until then, this forum keeps using its own search.
+    unreachable: >
+      Your setup is fine, but your search server isn't answering right now. Your
+      forum's own search is being used in the meantime, so members can still
+      search.
 
-      unreachable_title: Cannot reach your search server
-      unreachable_body: Your setup is fine, but the search server is not answering right now. Your forum's own search is being used in the meantime, so members can still search.
+    at_limit: >
+      Your search server is holding {indexed} posts, which is the limit on your
+      plan ({cap}). Newer posts aren't being added, so they won't turn up in
+      search. Upgrading your plan raises the limit.

@@ -11,8 +11,8 @@ app.initializers.add('linkrobins/forage', () => {
       {
         setting: 'linkrobins-forage.token',
         type: 'text',
-        label: app.translator.trans('linkrobins-forage.admin.settings.token_label'),
-        help: app.translator.trans('linkrobins-forage.admin.settings.token_help'),
+        label: app.translator.trans('linkrobins-forage.admin.key_label'),
+        help: app.translator.trans('linkrobins-forage.admin.key_help'),
       },
       90
     );
