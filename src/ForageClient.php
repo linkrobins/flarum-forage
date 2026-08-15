@@ -117,17 +117,21 @@ class ForageClient
         ]) !== null;
     }
 
-    /** How many documents the index currently holds, or null if it cannot be read. */
+    /**
+     * How many documents the index currently holds, or null if it cannot be
+     * read. Null is an ordinary answer, not a fault: the key is scoped, and
+     * reading the index's own statistics is a separate permission from writing
+     * to it, so a forum can be indexing perfectly well and still not be allowed
+     * to count what it sent.
+     *
+     * The count lives on the stats endpoint alone. Asking for the index itself
+     * returns only its uid, timestamps and primary key, which is why this no
+     * longer tries there first.
+     */
     public function documentCount(): ?int
     {
         if (! $this->settings->isConfigured()) {
             return null;
-        }
-
-        $body = $this->request('GET', '/indexes/'.$this->settings->index(), $this->settings->adminKey());
-
-        if (is_array($body) && isset($body['numberOfDocuments'])) {
-            return (int) $body['numberOfDocuments'];
         }
 
         $stats = $this->request('GET', '/indexes/'.$this->settings->index().'/stats', $this->settings->adminKey());

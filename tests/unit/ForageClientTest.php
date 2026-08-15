@@ -141,6 +141,35 @@ class ForageClientTest extends TestCase
         $this->assertEquals(['filter' => 'discussion_id = 42'], $body);
     }
 
+    /**
+     * Only the stats endpoint carries the count, so it is the only one asked.
+     * The index itself answers with its uid, timestamps and primary key.
+     *
+     * @test
+     */
+    #[Test]
+    public function it_counts_documents_from_the_stats_endpoint(): void
+    {
+        $client = $this->client([new Response(200, [], (string) json_encode(['numberOfDocuments' => 1234]))]);
+
+        $this->assertEquals(1234, $client->documentCount());
+        $this->assertStringEndsWith('/indexes/posts/stats', (string) $this->sent[0]['request']->getUri());
+        $this->assertCount(1, $this->sent);
+    }
+
+    /**
+     * A scoped key may be allowed to write to the index and not to read its
+     * statistics, so "cannot count" has to be an ordinary answer rather than
+     * something that breaks the page asking.
+     *
+     * @test
+     */
+    #[Test]
+    public function a_key_that_may_not_read_the_stats_simply_returns_no_count(): void
+    {
+        $this->assertNull($this->client([new Response(403)])->documentCount());
+    }
+
     /** @test */
     #[Test]
     public function it_declares_which_fields_are_searchable_and_filterable(): void
