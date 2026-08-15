@@ -28,11 +28,20 @@ linkrobins-forage:
       That key wasn't recognized. Check that you copied it in full, and that
       your Forage subscription is still active. Your forum's own search is being
       used in the meantime.
+    invalid_still_connected: >
+      That key wasn't recognized, so it hasn't been used. Check that you copied
+      it in full, and that your Forage subscription is still active. Your forum
+      is still searching through the key it had before, so nothing has stopped
+      working.
 
     error: >
       Forage couldn't finish setting up. Your forum's own search is still
       working, so nothing is broken for your members. Try saving your key again,
       and get in touch if it keeps happening.
+    error_still_connected: >
+      Forage couldn't check that key, so it hasn't been used. Your forum is
+      still searching through the key it had before, so nothing has stopped
+      working. Try saving again, and get in touch if it keeps happening.
 
     unreachable: >
       Your setup is fine, but your search server isn't answering right now. Your

@@ -169,13 +169,51 @@ class ConfigExchangeTest extends TestCase
         $this->assertEquals('admin-key', $this->settings->adminKey());
     }
 
-    /** @test */
+    /**
+     * Clearing the field is how an admin disconnects, and the settings page
+     * says so. It has to actually disconnect: a forum that kept indexing to a
+     * search server after its owner cleared the key would be doing something
+     * nobody asked for, and they would have no way of knowing.
+     *
+     * @test
+     */
     #[Test]
-    public function an_empty_key_clears_the_status_without_calling_out(): void
+    public function clearing_the_key_disconnects_the_forum(): void
     {
-        $exchange = $this->exchange([]);
+        $exchange = $this->exchange([], [
+            Settings::ENDPOINT => 'https://tenant.example.com',
+            Settings::INDEX => 'posts',
+            Settings::SEARCH_KEY => 'search-key',
+            Settings::ADMIN_KEY => 'admin-key',
+            Settings::POST_CAP => '50000',
+        ]);
 
         $this->assertEquals(Settings::STATUS_UNCONFIGURED, $exchange->exchange('   '));
+
+        $this->assertFalse($this->settings->isConfigured(), 'nothing may be left that could keep indexing');
+        $this->assertFalse($this->settings->canSearch(), 'nor anything that could keep answering searches');
+        $this->assertEquals('', $this->settings->endpoint());
+        $this->assertEquals('', $this->settings->adminKey());
+        $this->assertEquals('', $this->settings->searchKey());
+        // Nothing was asked of the service to do it.
         $this->assertCount(0, $this->sent);
+    }
+
+    /**
+     * A key typed wrongly over a working one is a slip, not an instruction to
+     * disconnect, so the setup that already worked is left alone.
+     *
+     * @test
+     */
+    #[Test]
+    public function a_wrong_key_does_not_disconnect_a_working_forum(): void
+    {
+        $exchange = $this->exchange([new Response(404)], [
+            Settings::ENDPOINT => 'https://tenant.example.com',
+            Settings::ADMIN_KEY => 'admin-key',
+        ]);
+
+        $this->assertEquals(Settings::STATUS_INVALID, $exchange->exchange('a-mistyped-key'));
+        $this->assertTrue($this->settings->isConfigured());
     }
 }

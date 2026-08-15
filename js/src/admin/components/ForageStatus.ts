@@ -108,6 +108,15 @@ export default class ForageStatus extends Component {
   body(condition: string): Mithril.Children {
     const status = this.status;
 
+    // A key typed wrongly over a working one does NOT take the forum off
+    // Forage: the setup it already had is kept, precisely so a slip cannot
+    // knock out a working search box. Saying "your forum's own search is
+    // being used" here would therefore be untrue, and this is exactly the
+    // screen where somebody is trying to work out what is going on.
+    if ((condition === 'invalid' || condition === 'error') && status?.configured) {
+      return this.trans(condition + '_still_connected');
+    }
+
     if (condition === 'at_limit' && status) {
       return this.trans('at_limit', {
         indexed: status.indexed?.toLocaleString(),

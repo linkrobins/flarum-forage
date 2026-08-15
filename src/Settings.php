@@ -131,6 +131,27 @@ final class Settings
         $this->settings->set(self::CONFIGURED_AT, (string) time());
     }
 
+    /**
+     * Disconnect the forum from its search server.
+     *
+     * Everything the exchange wrote is dropped, so nothing is left that could
+     * keep indexing or answering searches. That is the whole point: an admin
+     * who clears the key has said they want to stop, and a forum that carried
+     * on pushing its posts to a search server afterwards would be doing
+     * something nobody asked for.
+     *
+     * The documents already on the search server are left alone. Emptying
+     * somebody's index because a field was cleared, possibly by accident and
+     * possibly only to retype the key, is not a decision to make on their
+     * behalf. Reconnecting re-fills it anyway.
+     */
+    public function forget(): void
+    {
+        foreach ([self::ENDPOINT, self::INDEX, self::SEARCH_KEY, self::ADMIN_KEY, self::POST_CAP, self::CONFIGURED_AT] as $key) {
+            $this->settings->set($key, '');
+        }
+    }
+
     public function setStatus(string $status, string $detail = ''): void
     {
         $this->settings->set(self::STATUS, $status);

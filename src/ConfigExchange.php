@@ -33,7 +33,12 @@ class ConfigExchange
     {
         $token = trim($token);
 
+        // Clearing the field is how an admin disconnects, so it has to
+        // actually disconnect: drop the stored endpoint and keys as well as
+        // the status. Leaving them behind would keep the forum indexing to a
+        // search server its owner had just told it to stop using.
         if ($token === '') {
+            $this->settings->forget();
             $this->settings->setStatus(Settings::STATUS_UNCONFIGURED);
 
             return Settings::STATUS_UNCONFIGURED;
