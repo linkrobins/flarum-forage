@@ -1,0 +1,80 @@
+{
+    "name": "linkrobins/flarum-forage",
+    "description": "Hosted search for Flarum, powered by Forage. Indexes your posts into your own search server and routes forum search through it.",
+    "type": "flarum-extension",
+    "keywords": [
+        "flarum",
+        "search",
+        "meilisearch",
+        "forage",
+        "hosted"
+    ],
+    "homepage": "https://linkrobins.com/forage",
+    "support": {
+        "issues": "https://github.com/linkrobins/flarum-forage/issues",
+        "source": "https://github.com/linkrobins/flarum-forage",
+        "docs": "https://linkrobins.com/forage",
+        "forum": "https://linkrobins.com/forum",
+        "email": "karl@linkrobins.com"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Link Robins",
+            "email": "karl@linkrobins.com",
+            "homepage": "https://linkrobins.com"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "flarum/core": "^2.0"
+    },
+    "require-dev": {
+        "flarum/phpstan": "^2.0",
+        "flarum/testing": "^2.0"
+    },
+    "minimum-stability": "beta",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "LinkRobins\\Forage\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LinkRobins\\Forage\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "analyse:phpstan": "phpstan analyse",
+        "clear-cache:phpstan": "phpstan clear-result-cache",
+        "test": "@test:unit && @test:integration",
+        "test:unit": "phpunit -c tests/phpunit.unit.xml",
+        "test:integration": "phpunit -c tests/phpunit.integration.xml",
+        "test:setup": "@php tests/integration/setup.php"
+    },
+    "scripts-descriptions": {
+        "analyse:phpstan": "Run static analysis.",
+        "test": "Runs all tests.",
+        "test:unit": "Runs all unit tests.",
+        "test:integration": "Runs all integration tests.",
+        "test:setup": "Sets up a database for use with integration tests. Execute this only once."
+    },
+    "extra": {
+        "flarum-extension": {
+            "title": "Link Robins Forage",
+            "category": "feature",
+            "icon": {
+                "name": "fas fa-magnifying-glass",
+                "color": "#07adcc",
+                "backgroundColor": "#1a2535"
+            }
+        },
+        "flarum-cli": {
+            "modules": {
+                "githubActions": true,
+                "backendTesting": true
+            }
+        }
+    }
+}
