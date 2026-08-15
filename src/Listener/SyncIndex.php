@@ -6,11 +6,9 @@ use Flarum\Discussion\Event\Deleted;
 use Flarum\Discussion\Event\Hidden;
 use Flarum\Discussion\Event\Renamed;
 use Flarum\Discussion\Event\Restored;
-use Flarum\Post\Event\Deleted as PostDeleted;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Queue\Queue;
 use LinkRobins\Forage\Job\RemoveDiscussion;
-use LinkRobins\Forage\Job\RemovePost;
 use LinkRobins\Forage\Job\SyncDiscussion;
 use LinkRobins\Forage\Settings;
 
@@ -31,7 +29,14 @@ use LinkRobins\Forage\Settings;
  * fire on every reply, because a reply bumps the discussion, and re-indexing a
  * whole discussion every time somebody posts in it would be absurd.
  *
- * One post event is handled here too, for a reason RemovePost explains.
+ * Nothing about posts is handled here. Flarum's own indexing covers every post
+ * change including deletion, verified against a Redis queue rather than assumed:
+ * a post deleted through the API loses its document within seconds.
+ *
+ * Note for anyone tempted to add one: Flarum\Post\Event\Deleted is never
+ * dispatched in 2.0. The model raises it, but nothing releases the raised events
+ * on the delete path, so a listener on it is silently dead. The Eloquent model
+ * event, which is what Flarum's indexing watches, does fire.
  */
 class SyncIndex
 {
@@ -47,10 +52,6 @@ class SyncIndex
         $events->listen(Hidden::class, [$this, 'whenChanged']);
         $events->listen(Restored::class, [$this, 'whenChanged']);
         $events->listen(Deleted::class, [$this, 'whenDeleted']);
-
-        // See RemovePost: Flarum's own path cannot carry a deletion across a
-        // real queue, so deletions are queued here by id as well.
-        $events->listen(PostDeleted::class, [$this, 'whenPostDeleted']);
     }
 
     public function whenChanged(Renamed|Hidden|Restored $event): void
@@ -61,11 +62,6 @@ class SyncIndex
     public function whenDeleted(Deleted $event): void
     {
         $this->push(new RemoveDiscussion((int) $event->discussion->id));
-    }
-
-    public function whenPostDeleted(PostDeleted $event): void
-    {
-        $this->push(new RemovePost((int) $event->post->id));
     }
 
     /**
