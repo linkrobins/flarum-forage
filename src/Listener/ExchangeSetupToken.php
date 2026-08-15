@@ -34,12 +34,24 @@ class ExchangeSetupToken
 
         $token = trim((string) $event->settings[Settings::TOKEN]);
 
+        $was = $this->settings->isConfigured() ? $this->settings->endpoint().'/'.$this->settings->index() : '';
+
         $status = $this->exchange->exchange($token);
 
-        // A newly connected forum has an empty index, so fill it. Queued,
-        // because a forum with a long history takes a while and the admin
-        // pressing Save should not sit and watch it.
-        if ($status === Settings::STATUS_OK) {
+        if ($status !== Settings::STATUS_OK) {
+            return;
+        }
+
+        $now = $this->settings->endpoint().'/'.$this->settings->index();
+
+        // Fill the index, but only when this save actually pointed the forum at
+        // an empty one: a forum connecting for the first time, or moving to a
+        // different search server. Re-saving a key that was already working
+        // would otherwise rebuild the whole forum for nothing.
+        //
+        // Queued, because a forum with a long history takes a while and the
+        // admin who pressed Save should not sit and watch it.
+        if ($was !== $now) {
             $this->queue->push(new ReindexAll());
         }
     }
