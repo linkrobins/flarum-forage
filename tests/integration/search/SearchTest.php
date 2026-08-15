@@ -141,6 +141,28 @@ class SearchTest extends TestCase
         $this->assertEquals([2], array_map(fn ($d) => (int) $d['id'], $body['data']));
     }
 
+    /**
+     * Discussion search asks the server for one post per discussion, so that a
+     * single busy thread cannot use up the whole result set. Post search must
+     * not, because there the posts themselves are the results.
+     *
+     * @test
+     */
+    #[Test]
+    public function only_discussion_search_collapses_by_discussion(): void
+    {
+        FakeForageClient::$ids = [1];
+
+        $this->searchDiscussions('anything');
+        $this->assertEquals('discussion_id', FakeForageClient::$distinct);
+
+        $this->send(
+            $this->request('GET', '/api/posts', ['authenticatedAs' => 2])
+                ->withQueryParams(['filter' => ['q' => 'anything']])
+        );
+        $this->assertNull(FakeForageClient::$distinct);
+    }
+
     /** @test */
     #[Test]
     public function post_search_drops_results_a_member_may_not_read(): void

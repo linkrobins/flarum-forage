@@ -18,13 +18,26 @@ use LinkRobins\Forage\ForageClient;
 class ForageResults
 {
     /**
-     * How many posts to ask for.
+     * How many hits to ask for.
      *
      * Every hit is carried into the SQL query as a literal, so this is a real
-     * ceiling rather than a formality. It is well past what anyone pages
-     * through in a forum search, and the README says so.
+     * ceiling rather than a formality. Discussion search asks the server to
+     * return one post per discussion (see $distinct below), so for that search
+     * this is a ceiling on DISCUSSIONS, which is well past what anyone pages
+     * through.
      */
     public const MAX_HITS = 250;
+
+    /**
+     * The field discussion search collapses on.
+     *
+     * Without it the ceiling is spent on posts rather than discussions, and one
+     * busy thread can take all of it: measured on a 5,000-post forum, a common
+     * word returned 250 posts belonging to 10 discussions when 200 actually
+     * matched. Collapsing gives each discussion one slot and its best-matching
+     * post, which is exactly what a list of discussions needs.
+     */
+    public const PER_DISCUSSION = 'discussion_id';
 
     public function __construct(
         protected ForageClient $client
@@ -40,9 +53,9 @@ class ForageResults
      *
      * @return array<int, int>|null
      */
-    public function visiblePosts(User $actor, string $query): ?array
+    public function visiblePosts(User $actor, string $query, ?string $distinct = null): ?array
     {
-        $ids = $this->client->searchPostIds($query, self::MAX_HITS);
+        $ids = $this->client->searchPostIds($query, self::MAX_HITS, $distinct);
 
         if ($ids === null) {
             return null;

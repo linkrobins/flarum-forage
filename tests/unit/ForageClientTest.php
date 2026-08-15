@@ -59,6 +59,43 @@ class ForageClientTest extends TestCase
     }
 
     /**
+     * Searching for discussions asks the server for one post per discussion.
+     * Without it a single busy thread eats the whole result set and everything
+     * below it falls off the end — measured at 250 posts across 10 discussions
+     * when 200 matched.
+     *
+     * @test
+     */
+    #[Test]
+    public function discussion_search_collapses_to_one_post_per_discussion(): void
+    {
+        $client = $this->client([new Response(200, [], (string) json_encode(['hits' => []]))]);
+
+        $client->searchPostIds('anything', 250, 'discussion_id');
+
+        $body = json_decode((string) $this->sent[0]['request']->getBody(), true);
+
+        $this->assertEquals('discussion_id', $body['distinct']);
+        $this->assertEquals(250, $body['limit']);
+    }
+
+    /**
+     * Post search must NOT collapse: there the individual posts are the
+     * results, so one per discussion would throw most of them away.
+     *
+     * @test
+     */
+    #[Test]
+    public function post_search_does_not_collapse(): void
+    {
+        $client = $this->client([new Response(200, [], (string) json_encode(['hits' => []]))]);
+
+        $client->searchPostIds('anything');
+
+        $this->assertArrayNotHasKey('distinct', json_decode((string) $this->sent[0]['request']->getBody(), true));
+    }
+
+    /**
      * A search that could not run and a search that matched nothing are
      * different answers: one falls back to the forum's own search, the other
      * legitimately shows no results.

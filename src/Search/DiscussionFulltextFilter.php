@@ -30,7 +30,7 @@ class DiscussionFulltextFilter extends AbstractFulltextFilter
 
     public function search(SearchState $state, string $value): void
     {
-        $posts = $this->results->visiblePosts($state->getActor(), $value);
+        $posts = $this->results->visiblePosts($state->getActor(), $value, ForageResults::PER_DISCUSSION);
 
         if ($posts === null) {
             $this->fallback->search($state, $value);
