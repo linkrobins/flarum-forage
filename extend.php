@@ -2,8 +2,8 @@
 
 use Flarum\Discussion\Search\DiscussionSearcher;
 use Flarum\Extend;
+use Flarum\Post\CommentPost;
 use Flarum\Post\Filter\PostSearcher;
-use Flarum\Post\Post;
 use Flarum\Search\Database\DatabaseSearchDriver;
 use Flarum\Settings\Event\Deserializing;
 use Flarum\Settings\Event\Saved;
@@ -45,11 +45,22 @@ return [
         ->setFulltext(DiscussionSearcher::class, DiscussionFulltextFilter::class)
         ->setFulltext(PostSearcher::class, PostFulltextFilter::class),
 
-    // Flarum watches the Post model and hands changes to the indexer on a
-    // queue, which covers written, edited, hidden, restored, deleted and
-    // approved without a listener of our own.
+    /*
+     * Flarum watches the model and hands changes to the indexer on a queue,
+     * which covers written, edited, hidden, restored and approved without a
+     * listener of our own.
+     *
+     * Registered against CommentPost, not Post. Every post row is really one of
+     * Post's subclasses, and Eloquent fires model events under the concrete
+     * class, so an indexer registered against Post is looked up under
+     * CommentPost, found missing, and silently never runs. Registering the
+     * parent class costs nothing and does nothing.
+     *
+     * Comments are also the only posts worth indexing: the rest are event
+     * posts, which carry no text anybody searches for.
+     */
     (new Extend\SearchIndex())
-        ->indexer(Post::class, PostIndexer::class),
+        ->indexer(CommentPost::class, PostIndexer::class),
 
     (new Extend\Event())
         ->subscribe(SyncIndex::class)
