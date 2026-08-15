@@ -136,6 +136,24 @@ class ForageClient
     }
 
     /**
+     * How forgiving the search server is about misspellings.
+     *
+     * A word has to be at least this long before a typo in it is forgiven at
+     * all. These are the search server's own defaults, set here rather than
+     * left implicit so that every forum searches the same way whatever its
+     * server was set up with, and so there is one place to change it.
+     *
+     * Lowering the first number is tempting, because it is what stops a
+     * three-letter query like "bds" from finding "beds". Measured on a sample
+     * index, dropping it to 3 also made "car" match half the forum, "php" match
+     * a thread about cats, and "bat" match one about sourdough. Three letters
+     * is simply not enough to tell a misspelling from a different word. Typing
+     * a short word correctly, or typing the start of a longer one, both already
+     * work: prefix matching means "bed" finds "beds".
+     */
+    public const MIN_WORD_SIZE_FOR_TYPOS = ['oneTypo' => 5, 'twoTypos' => 9];
+
+    /**
      * Make sure the index exists and knows which fields to search.
      *
      * Safe to run repeatedly: creating an index that exists is a no-op error we
@@ -153,8 +171,14 @@ class ForageClient
         ]);
 
         return $this->request('PATCH', '/indexes/'.$this->settings->index().'/settings', $this->settings->adminKey(), [
+            // Title first: it carries more weight than the body it repeats.
             'searchableAttributes' => ['title', 'content'],
+            // Without this a deleted discussion could not be cleared by filter.
             'filterableAttributes' => ['discussion_id'],
+            'typoTolerance' => [
+                'enabled' => true,
+                'minWordSizeForTypos' => self::MIN_WORD_SIZE_FOR_TYPOS,
+            ],
         ]) !== null;
     }
 

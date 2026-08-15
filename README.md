@@ -39,6 +39,13 @@ restored, approved, deleted. Renaming a discussion re-indexes its posts, because
 each post is indexed under its discussion's title. Hiding or deleting a
 discussion takes its posts out of the index.
 
+**Spelling.** A misspelled word still finds what you meant, as long as the word is
+long enough to tell a typo from a different word: five letters for one typo, nine
+for two. "rhubar" and "rhubrb" both find rhubarb. Short words are matched exactly,
+because at three letters almost every other short word is one typo away, and a
+search for "php" or "cat" that returned half the forum would be worse than useless.
+Typing the start of a word works at any length, so "bed" finds "beds".
+
 **Permissions.** Results are always filtered through Flarum's own visibility
 rules before they are shown. The search server has no idea who is asking, so
 everything it returns is treated as a suggestion and checked against what the

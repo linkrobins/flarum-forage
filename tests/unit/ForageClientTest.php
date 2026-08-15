@@ -159,5 +159,8 @@ class ForageClientTest extends TestCase
         $this->assertEquals(['title', 'content'], $configured['searchableAttributes']);
         // Without this, a deleted discussion could not be cleared by filter.
         $this->assertEquals(['discussion_id'], $configured['filterableAttributes']);
+        // Spelled out rather than left to whatever the server was set up with,
+        // so every forum searches the same way.
+        $this->assertEquals(['oneTypo' => 5, 'twoTypos' => 9], $configured['typoTolerance']['minWordSizeForTypos']);
     }
 }
