@@ -14,7 +14,7 @@ use Flarum\Post\Post;
  */
 class PostDocument
 {
-    /** Meilisearch rejects oversized documents, and a whole post is rarely the useful part. */
+    /** The search server rejects oversized documents, and a whole post is rarely the useful part. */
     public const MAX_CONTENT = 30000;
 
     /**
