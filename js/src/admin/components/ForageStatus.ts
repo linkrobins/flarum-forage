@@ -9,6 +9,8 @@ interface StatusResponse {
   configured: boolean;
   reachable: boolean;
   indexed: number | null;
+  expected: number | null;
+  health: string;
   cap: number;
 }
 
@@ -86,6 +88,19 @@ export default class ForageStatus extends Component {
       return 'at_limit';
     }
 
+    // A key can be perfectly valid while the index behind it is empty or has
+    // been emptied, in which case searches quietly find nothing and everything
+    // else here would still say "Connected".
+    if (status.status === 'ok') {
+      if (status.health === 'empty') {
+        return 'index_empty';
+      }
+
+      if (status.health === 'short') {
+        return 'index_short';
+      }
+    }
+
     return status.status;
   }
 
@@ -97,7 +112,14 @@ export default class ForageStatus extends Component {
       case 'error':
       case 'unreachable':
       case 'at_limit':
+      // An empty index means every search finds nothing, which is as broken as
+      // a bad key even though the key is fine.
+      case 'index_empty':
         return 'Alert Alert--error';
+      // Being behind is usually a forum still filling up, so it is said
+      // plainly rather than raised as a fault.
+      case 'index_short':
+        return 'Alert';
       // Nothing pasted yet, or a key whose server is still being built: neither
       // of those is anything wrong.
       default:
@@ -115,6 +137,13 @@ export default class ForageStatus extends Component {
     // screen where somebody is trying to work out what is going on.
     if ((condition === 'invalid' || condition === 'error') && status?.configured) {
       return this.trans(condition + '_still_connected');
+    }
+
+    if ((condition === 'index_empty' || condition === 'index_short') && status) {
+      return this.trans(condition, {
+        indexed: (status.indexed ?? 0).toLocaleString(),
+        expected: (status.expected ?? 0).toLocaleString(),
+      });
     }
 
     if (condition === 'at_limit' && status) {
