@@ -99,11 +99,10 @@ from posts that no longer exist.
 
 ```sh
 composer require linkrobins/flarum-forage
-php flarum extension:enable linkrobins-forage
 ```
 
-Installing does not enable an extension. The second line is the on switch;
-Extension Manager has a toggle that does the same thing.
+Installing does not enable an extension: flip it on from your admin panel's
+Extensions page afterwards.
 
 ## Updating
 
