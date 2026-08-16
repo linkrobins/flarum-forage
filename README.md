@@ -51,7 +51,11 @@ rules before they are shown. The search server has no idea who is asking, so
 everything it returns is treated as a suggestion and checked against what the
 person searching is allowed to read. A member cannot see a private discussion,
 a hidden post, or a post awaiting approval through search, whatever the search
-server says. Posts that are not readable are not indexed in the first place.
+server says. Hidden and unapproved posts are never indexed at all. Posts in
+permission-restricted areas — a members-only or staff tag, say — are indexed,
+so that the people allowed to read them can search them; they live on your own
+dedicated search server, and your forum's permission rules decide who sees
+them in results, exactly as they decide who sees them anywhere else.
 
 **If the search server is unavailable**, searching falls back to the search
 Flarum ships with. Your search box keeps working; it is simply less good until
@@ -64,7 +68,7 @@ the server is back. The same is true before you have entered a key at all.
   server; the page is Flarum's.
 - It does not send anything to the search server except the post text, its id,
   its discussion's id and title. No usernames, no email addresses, no IPs.
-- It does not index posts that members cannot read.
+- It does not index hidden or unapproved posts.
 
 ## Rebuilding the index
 

@@ -29,8 +29,9 @@ class ExchangeSetupTokenTest extends TestCase
     /**
      * @param array<string, mixed> $stored
      * @param array<string, mixed> $returns what the config service answers with
+     * @param int|null $count what the search server says it holds
      */
-    protected function listener(array $stored = [], array $returns = []): ExchangeSetupToken
+    protected function listener(array $stored = [], array $returns = [], ?int $count = 0): ExchangeSetupToken
     {
         $this->settings = new Settings(new ArraySettingsRepository($stored));
         $this->queue = new RecordingQueue();
@@ -46,7 +47,7 @@ class ExchangeSetupTokenTest extends TestCase
             ])),
         ]))]);
 
-        return new ExchangeSetupToken($this->settings, $exchange, $this->queue);
+        return new ExchangeSetupToken($this->settings, $exchange, $this->queue, new FixedCountForageClient($this->settings, $count));
     }
 
     /** @test */
@@ -73,7 +74,7 @@ class ExchangeSetupTokenTest extends TestCase
             Settings::ENDPOINT => 'https://tenant.example.com',
             Settings::INDEX => 'posts',
             Settings::ADMIN_KEY => 'admin-key',
-        ]);
+        ], count: 374);
 
         $listener->handle(new Saved([Settings::TOKEN => 'a-setup-key']));
 
@@ -115,5 +116,70 @@ class ExchangeSetupTokenTest extends TestCase
 
         $this->assertCount(0, $this->queue->jobs);
         $this->assertEquals(Settings::STATUS_UNCONFIGURED, $this->settings->status());
+    }
+
+    /**
+     * The resubscribe gap, which is what this rule exists for: a returning
+     * customer gets a fresh container at the SAME endpoint, so the old
+     * endpoint-comparison saw nothing to do and left them connected to an
+     * empty index — search "working" and finding nothing.
+     *
+     * @test
+     */
+    #[Test]
+    public function reconnecting_to_an_empty_index_at_the_same_endpoint_refills_it(): void
+    {
+        $listener = $this->listener([
+            Settings::ENDPOINT => 'https://tenant.example.com',
+            Settings::INDEX => 'posts',
+            Settings::ADMIN_KEY => 'stale-key-from-before-the-resubscribe',
+        ], count: 0);
+
+        $listener->handle(new Saved([Settings::TOKEN => 'a-setup-key']));
+
+        $this->assertCount(1, $this->queue->jobs);
+        $this->assertInstanceOf(ReindexAll::class, $this->queue->jobs[0]);
+    }
+
+    /**
+     * An unreadable count is a hiccup, not an empty index. Guessing "empty"
+     * would rebuild a large forum on a blip, so with the endpoint unchanged,
+     * nothing is queued.
+     *
+     * @test
+     */
+    #[Test]
+    public function an_unreadable_count_on_an_unchanged_endpoint_rebuilds_nothing(): void
+    {
+        $listener = $this->listener([
+            Settings::ENDPOINT => 'https://tenant.example.com',
+            Settings::INDEX => 'posts',
+            Settings::ADMIN_KEY => 'admin-key',
+        ], count: null);
+
+        $listener->handle(new Saved([Settings::TOKEN => 'a-setup-key']));
+
+        $this->assertCount(0, $this->queue->jobs);
+    }
+
+    /**
+     * With the count unreadable, moving to a different endpoint falls back to
+     * the old comparison and still refills — a brand-new server that cannot be
+     * counted yet is far more likely empty than full.
+     *
+     * @test
+     */
+    #[Test]
+    public function an_unreadable_count_on_a_new_endpoint_still_refills(): void
+    {
+        $listener = $this->listener([
+            Settings::ENDPOINT => 'https://old-tenant.example.com',
+            Settings::INDEX => 'posts',
+            Settings::ADMIN_KEY => 'admin-key',
+        ], count: null);
+
+        $listener->handle(new Saved([Settings::TOKEN => 'a-setup-key']));
+
+        $this->assertCount(1, $this->queue->jobs);
     }
 }
