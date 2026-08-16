@@ -5,6 +5,7 @@ namespace LinkRobins\Forage\Listener;
 use Flarum\Settings\Event\Saved;
 use Illuminate\Contracts\Queue\Queue;
 use LinkRobins\Forage\ConfigExchange;
+use LinkRobins\Forage\ForageClient;
 use LinkRobins\Forage\Job\ReindexAll;
 use LinkRobins\Forage\Settings;
 
@@ -20,7 +21,8 @@ class ExchangeSetupToken
     public function __construct(
         protected Settings $settings,
         protected ConfigExchange $exchange,
-        protected Queue $queue
+        protected Queue $queue,
+        protected ForageClient $client
     ) {
     }
 
@@ -44,14 +46,24 @@ class ExchangeSetupToken
 
         $now = $this->settings->endpoint().'/'.$this->settings->index();
 
-        // Fill the index, but only when this save actually pointed the forum at
-        // an empty one: a forum connecting for the first time, or moving to a
-        // different search server. Re-saving a key that was already working
-        // would otherwise rebuild the whole forum for nothing.
+        // Fill the index when it needs filling — which is a fact about the
+        // INDEX, not about which fields changed in this save. Asking the
+        // server "how much do you hold?" covers every way an admin arrives
+        // here with an empty index behind a valid key: connecting for the
+        // first time, moving to a different search server, and — the case the
+        // old endpoint-comparison missed — re-subscribing, where the same
+        // handle means the same endpoint but the new container is empty.
+        // Re-saving a key over a filled index still rebuilds nothing.
+        //
+        // A null count means the server would not say (a hiccup, or a
+        // pre-stats key); guessing "empty" would rebuild a large forum on a
+        // blip, so fall back to the endpoint comparison instead.
         //
         // Queued, because a forum with a long history takes a while and the
         // admin who pressed Save should not sit and watch it.
-        if ($was !== $now) {
+        $count = $this->client->documentCount();
+
+        if ($count === 0 || ($count === null && $was !== $now)) {
             $this->queue->push(new ReindexAll());
         }
     }
