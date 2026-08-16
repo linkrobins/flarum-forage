@@ -3,7 +3,7 @@
 namespace LinkRobins\Forage;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\GuzzleException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -48,10 +48,16 @@ class ConfigExchange
             $response = $this->client()->post(self::ENDPOINT, [
                 'json' => ['token' => $token],
                 'headers' => Agent::HEADERS,
+                'connect_timeout' => 5,
                 'timeout' => 15,
                 'http_errors' => false,
             ]);
-        } catch (RequestException $e) {
+        } catch (GuzzleException $e) {
+            // GuzzleException, not RequestException: an unreachable host or a
+            // connect timeout raises ConnectException, which is NOT a
+            // RequestException — catching the narrower type meant exactly the
+            // "service unreachable" case this block describes would throw
+            // through and 500 the settings save.
             // The service was unreachable, which is not the same as the token
             // being wrong. Say so, and keep any working config already stored.
             $this->log->error('[linkrobins/forage] could not reach the config service: '.$e->getMessage());

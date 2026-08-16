@@ -25,7 +25,7 @@ class ForageClient
     /**
      * Post IDs matching a query, best match first.
      *
-     * IDs only, on purpose. Meilisearch has no idea who is asking, so it can
+     * IDs only, on purpose. The search server has no idea who is asking, so it can
      * only ever supply candidates; the caller intersects them with what the
      * actor may actually see. Returning documents here would invite someone to
      * render them straight out, which would leak private posts.
@@ -58,7 +58,12 @@ class ForageClient
             $payload['distinct'] = $distinct;
         }
 
-        $body = $this->request('POST', '/indexes/'.$this->settings->index().'/search', $this->settings->keyForSearching(), $payload);
+        // A short leash, because this runs INSIDE the member's search request:
+        // every second spent waiting here is a second a human stares at a
+        // spinner, and the whole point of the fallback is that a sick tenant
+        // degrades search instead of hanging it. Writes keep the longer default
+        // — they run on the queue, where patience is cheap.
+        $body = $this->request('POST', '/indexes/'.$this->settings->index().'/search', $this->settings->keyForSearching(), $payload, timeout: 5);
 
         if (! is_array($body) || ! isset($body['hits']) || ! is_array($body['hits'])) {
             return null;
@@ -76,7 +81,7 @@ class ForageClient
     }
 
     /**
-     * Add or replace documents. Meilisearch upserts on the primary key, so this
+     * Add or replace documents. The search server upserts on the primary key, so this
      * is the same call for a new post and an edited one, which keeps the sync
      * jobs idempotent.
      *
@@ -205,8 +210,9 @@ class ForageClient
         }
 
         try {
-            $response = $this->client()->get($this->settings->endpoint().'/health', [
+            $response = $this->http()->get($this->settings->endpoint().'/health', [
                 'headers' => Agent::HEADERS,
+                'connect_timeout' => 3,
                 'timeout' => 8,
                 'http_errors' => false,
             ]);
@@ -221,7 +227,7 @@ class ForageClient
      * @param array<mixed>|null $payload
      * @return array<mixed>|null null on any failure, having logged it
      */
-    protected function request(string $method, string $path, string $key, ?array $payload = null): ?array
+    protected function request(string $method, string $path, string $key, ?array $payload = null, int $timeout = 20): ?array
     {
         if ($key === '') {
             return null;
@@ -229,7 +235,10 @@ class ForageClient
 
         $options = [
             'headers' => Agent::HEADERS + ['Authorization' => 'Bearer '.$key],
-            'timeout' => 20,
+            // Guzzle's default connect_timeout is 0 — wait as long as the OS
+            // will — so a blackholed route could hang far past 'timeout'.
+            'connect_timeout' => 3,
+            'timeout' => $timeout,
             'http_errors' => false,
         ];
 
@@ -238,7 +247,7 @@ class ForageClient
         }
 
         try {
-            $response = $this->client()->request($method, $this->settings->endpoint().$path, $options);
+            $response = $this->http()->request($method, $this->settings->endpoint().$path, $options);
         } catch (GuzzleException $e) {
             $this->log->error('[linkrobins/forage] '.$method.' '.$path.' failed: '.$e->getMessage());
 
@@ -258,6 +267,17 @@ class ForageClient
         $decoded = json_decode((string) $response->getBody(), true);
 
         return is_array($decoded) ? $decoded : [];
+    }
+
+    private ?Client $http = null;
+
+    /** One client per instance: a reindex pushes hundreds of batches, and a
+     *  fresh client per call throws away connection reuse for all of them.
+     *  Kept separate from client() so test doubles that override the factory
+     *  keep working unchanged. */
+    protected function http(): Client
+    {
+        return $this->http ??= $this->client();
     }
 
     protected function client(): Client
