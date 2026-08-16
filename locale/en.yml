@@ -48,6 +48,20 @@ linkrobins-forage:
       forum's own search is being used in the meantime, so members can still
       search.
 
+    index_empty: >
+      Your key is fine, but your search server is holding nothing at all, so
+      searches on this forum are finding nothing. If you have just connected or
+      just rebuilt, it is still filling and this will sort itself out shortly.
+      If not, run "php flarum forage:reindex" on your server to fill it again
+      from your forum's own posts. Nothing has been lost either way: your posts
+      live in your forum's database, and the index is built from them.
+
+    index_short: >
+      Your search server is holding {indexed} posts, and this forum has
+      {expected} that belong there. If you have just connected, or just posted a
+      lot at once, it is still catching up and will settle on its own. If the
+      gap stays, run "php flarum forage:reindex" to rebuild it.
+
     at_limit: >
       Your search server is holding {indexed} posts, which is the limit on your
       plan ({cap}). Newer posts aren't being added, so they won't turn up in

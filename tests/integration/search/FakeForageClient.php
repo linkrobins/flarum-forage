@@ -79,9 +79,12 @@ class FakeForageClient extends ForageClient
         return true;
     }
 
+    /** What the search server claims to hold; null stands for "would not say". */
+    public static ?int $count = 0;
+
     public function documentCount(): ?int
     {
-        return 0;
+        return self::$count;
     }
 
     public function isReachable(): bool
