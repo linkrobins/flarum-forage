@@ -14,6 +14,7 @@ use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Illuminate\Contracts\Cache\Repository as Cache;
 use LinkRobins\Forage\Search\ForageResults;
+use LinkRobins\Forage\Settings;
 use LinkRobins\Forage\Search\RelatedDiscussions;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -35,6 +36,12 @@ class RelatedTest extends TestCase
         $this->extend(
             (new Extend\ServiceProvider())->register(FakeForageProvider::class)
         );
+
+        // A connected forum, with the fake standing in for its search server.
+        // The service will not ask a forum that cannot search, so leaving these
+        // out would test nothing but the guard.
+        $this->setting(Settings::ENDPOINT, 'https://search.example.invalid');
+        $this->setting(Settings::SEARCH_KEY, 'a-search-key');
 
         $this->prepareDatabase([
             'users' => [

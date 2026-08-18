@@ -78,7 +78,7 @@ class RelatedDiscussions
         // The frontend already knows this is off and does not ask. Checked
         // again here because the endpoint is open to anyone who can type a URL,
         // and a switched-off panel should not still be reachable through one.
-        if (! $this->settings->relatedUnderDiscussion()) {
+        if (! $this->available($this->settings->relatedUnderDiscussion(...))) {
             return [];
         }
 
@@ -101,7 +101,7 @@ class RelatedDiscussions
      */
     public function forQuery(User $actor, string $query, int $limit = self::COMPOSER_LIMIT): array
     {
-        if (! $this->settings->relatedInComposer()) {
+        if (! $this->available($this->settings->relatedInComposer(...))) {
             return [];
         }
 
@@ -110,6 +110,21 @@ class RelatedDiscussions
         }
 
         return $this->lookup($actor, $query, null, $limit, null);
+    }
+
+    /**
+     * Is this panel switched on, on a forum that can still search?
+     *
+     * The connection is part of the question because the candidate list is
+     * cached for a day: without this, a forum whose plan lapsed this morning
+     * would keep answering from the list its search server gave it yesterday,
+     * for as long as the cache holds.
+     *
+     * @param callable(): bool $switch
+     */
+    private function available(callable $switch): bool
+    {
+        return $this->settings->canSearch() && $switch();
     }
 
     /**
