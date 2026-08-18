@@ -31,6 +31,18 @@ class NormalizeSwitches
         Settings::RELATED_COMPOSER,
     ];
 
+    /**
+     * This works because of one word in core.
+     *
+     * Serializing declares `public string &$value`, and that string hint is
+     * what turns the admin page's JSON false into '' before any listener runs.
+     * The '' is what this normalises to '0'. If that signature ever loosens to
+     * mixed, a switched-off toggle arrives here as a real false, takes the
+     * else branch, and stores '1': the switch would stop sticking and the admin
+     * page would show the opposite of what the forum does. The failure would
+     * turn up versions later as "the toggle does not save", with nothing
+     * pointing back here, so the dependency is named rather than assumed.
+     */
     public function handle(Serializing $event): void
     {
         if (! in_array($event->key, self::SWITCHES, true)) {

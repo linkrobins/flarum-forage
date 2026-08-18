@@ -66,6 +66,18 @@ class RelatedController implements RequestHandlerInterface
             $discussions = $this->related->forQuery($actor, $this->stringParam($params, 'q'), $probe);
         }
 
+        // Under-reports in one case, on purpose. The service slices its
+        // candidates to what was asked for BEFORE loading the discussions and
+        // checking each one is visible, so a readable post hanging off an
+        // unreadable discussion drops out afterwards and the count falls back
+        // to the limit. hasMore then reads false while more relatives sit
+        // further down the candidate list.
+        //
+        // Left as it is. It fails in the safe direction, an absent button
+        // rather than a window with nothing new in it, and the alternative is
+        // to load and check every candidate the search server returned in order
+        // to count exactly, which is up to fifty discussions loaded on every
+        // discussion page view to decide whether to draw one button.
         $more = count($discussions) > $limit;
         $discussions = array_slice($discussions, 0, $limit);
 

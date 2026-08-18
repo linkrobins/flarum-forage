@@ -45,10 +45,21 @@ class ForumFields
                 ->get(fn (): bool => $this->on($this->settings->relatedInComposer(...))),
 
             // The two numbers the frontend would otherwise keep its own copies
-            // of. Both are enforced here whatever the frontend believes, so a
-            // stale copy in the bundle was never dangerous, only silent: lower
-            // the footer's limit in PHP and the old frontend would have gone on
-            // offering a longer list that the server had already cut.
+            // of. Both are enforced here whatever the frontend believes, but
+            // they are not equally worth carrying, and the difference decides
+            // which one goes back into the bundle if the weight of the forum
+            // payload ever matters.
+            //
+            // The footer's limit was the dangerous one, and it is not here at
+            // all any more: the frontend used to decide whether to offer "see
+            // more" by counting rows against its own copy of it, so lowering it
+            // in PHP would have stopped the button appearing and made the modal
+            // unreachable, with nothing logged. That is now answered by
+            // meta.hasMore and cannot drift.
+            //
+            // The minimum length below is the benign one. The server refuses a
+            // short query on its own, so a stale copy in the bundle costs one
+            // round trip that comes back empty. Drop this one first.
             Schema\Integer::make('forageRelatedExpandedLimit')
                 ->get(fn (): int => RelatedDiscussions::EXPANDED_LIMIT),
 
