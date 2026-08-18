@@ -40,6 +40,18 @@
     gap: 10px;
     padding: 6px 0;
 
+    // On a phone the meta held enough room on the right to wrap every title,
+    // and squeezed the ones carrying a reply count into half a column. It goes
+    // underneath instead, so the row reads down the page rather than across it
+    // and the title gets the full width. Core's own discussion list stacks the
+    // same way on a small screen.
+    @media (max-width: 767.98px) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 2px;
+      padding: 10px 0;
+    }
+
     // Against the panel's own surface, which is what core separates lists
     // with in the other direction.
     & + & {
