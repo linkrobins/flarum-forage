@@ -55,6 +55,12 @@ class RelatedController implements RequestHandlerInterface
                 'slug' => (string) $discussion->slug,
                 'title' => (string) $discussion->title,
                 'commentCount' => (int) $discussion->comment_count,
+                // When it was last worth reading, which is the better question
+                // than how many replies it has: a quiet forum is mostly threads
+                // with an opening post and nothing else, and a list of those
+                // labelled "0 replies" argues against itself. Falls back to
+                // when it started, for a discussion nobody has answered.
+                'lastPostedAt' => ($discussion->last_posted_at ?? $discussion->created_at)?->toIso8601String(),
             ], $discussions),
         ]);
     }

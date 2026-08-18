@@ -217,6 +217,28 @@ class RelatedTest extends TestCase
         $this->assertSame('Alpha', $row['title']);
         $this->assertSame('alpha', $row['slug']);
         $this->assertSame(3, $row['commentCount']);
+
+        // When it was last worth reading. The panel shows this on every row,
+        // and a reply count only when there are replies to count.
+        $this->assertStringStartsWith('2026-01-01T00:00:00', $row['lastPostedAt']);
+    }
+
+    /**
+     * A discussion nobody has answered still has to say something, so the date
+     * it started stands in for the date it was last posted in.
+     *
+     * @test
+     */
+    #[Test]
+    public function a_discussion_with_no_last_post_falls_back_to_when_it_started(): void
+    {
+        FakeForageClient::$ids = [1];
+
+        $this->database()->table('discussions')->where('id', 1)->update(['last_posted_at' => null]);
+
+        $row = $this->related(['discussion' => 2])['data'][0];
+
+        $this->assertStringStartsWith('2026-01-01T00:00:00', $row['lastPostedAt']);
     }
 
     /**

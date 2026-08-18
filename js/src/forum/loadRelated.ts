@@ -5,6 +5,8 @@ export interface RelatedDiscussion {
   slug: string;
   title: string;
   commentCount: number;
+  /** ISO 8601, or null for a discussion with no dates at all. */
+  lastPostedAt: string | null;
 }
 
 /**

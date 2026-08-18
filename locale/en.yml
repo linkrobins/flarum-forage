@@ -82,6 +82,7 @@ linkrobins-forage:
   forum:
     related_heading: Related discussions
     related_replies: "{count, plural, one {# reply} other {# replies}}"
+    related_more: More like this
 
     composer_heading: Similar discussions
     composer_dismiss: Hide these suggestions

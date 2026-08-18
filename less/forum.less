@@ -11,11 +11,13 @@
 // frontend down with it. Custom properties also follow the reader's light or
 // dark mode without this file knowing which is on.
 
+// A footer, not a card. A filled block across the content width competes with
+// the reply prompt directly above it, which is the thing a reader should be
+// clicking. A rule and some air say "there is more this way" quietly enough.
 .ForageRelated {
-  margin: 20px 0 0;
-  padding: 16px 20px;
-  background: var(--control-bg);
-  border-radius: var(--border-radius);
+  margin: 30px 0 0;
+  padding: 20px 0 0;
+  border-top: 1px solid var(--control-bg);
 
   &-heading {
     margin: 0 0 10px;
@@ -41,7 +43,7 @@
     // Against the panel's own surface, which is what core separates lists
     // with in the other direction.
     & + & {
-      border-top: 1px solid var(--body-bg);
+      border-top: 1px solid var(--control-bg);
     }
   }
 
@@ -53,11 +55,29 @@
     color: var(--link-color);
   }
 
-  &-count {
+  &-meta {
+    display: flex;
     flex: 0 0 auto;
+    gap: 6px;
     font-size: calc(0.85rem * var(--lr-ui-scale, 1));
     color: var(--muted-color);
     white-space: nowrap;
+  }
+
+  &-dot {
+    opacity: 0.6;
+  }
+
+  &-more {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: calc(0.85rem * var(--lr-ui-scale, 1));
+    color: var(--muted-color);
+
+    &:hover,
+    &:focus {
+      color: var(--link-color);
+    }
   }
 }
 

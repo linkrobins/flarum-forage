@@ -1,12 +1,15 @@
 import app from 'flarum/forum/app';
 import Component from 'flarum/common/Component';
 import Link from 'flarum/common/components/Link';
+import humanTime from 'flarum/common/helpers/humanTime';
 import loadRelated from '../loadRelated';
 import type { RelatedDiscussion } from '../loadRelated';
 import type Mithril from 'mithril';
 
 export interface RelatedPanelAttrs {
   discussionId: number;
+  /** The title being read, which is also what "more like this" searches for. */
+  title: string;
 }
 
 /**
@@ -65,18 +68,45 @@ export default class RelatedPanel extends Component<RelatedPanelAttrs> {
               { className: 'ForageRelated-link', href: app.route('discussion', { id: discussion.id + '-' + discussion.slug }) },
               discussion.title
             ),
-            m(
-              'span',
-              { className: 'ForageRelated-count' },
-              // Core counts the opening post in commentCount and shows one
-              // fewer as the reply count; match it rather than invent a number.
-              app.translator.trans('linkrobins-forage.forum.related_replies', {
-                count: Math.max(0, discussion.commentCount - 1),
-              })
-            )
+            m('span', { className: 'ForageRelated-meta' }, this.meta(discussion))
           )
         )
-      )
+      ),
+      this.more()
+    );
+  }
+
+  /**
+   * What each row says about itself.
+   *
+   * A reply count only when there are replies: most threads on a quiet forum
+   * have none, and a list recommending them should not open by saying so. When
+   * it was last posted in is worth showing either way, so it always is.
+   */
+  meta(discussion: RelatedDiscussion): Mithril.Children {
+    const parts: Mithril.Children[] = [];
+
+    // Core counts the opening post in commentCount and shows one fewer as the
+    // reply count; match it rather than invent a number.
+    const replies = Math.max(0, discussion.commentCount - 1);
+
+    if (replies > 0) {
+      parts.push(app.translator.trans('linkrobins-forage.forum.related_replies', { count: replies }));
+    }
+
+    if (discussion.lastPostedAt) {
+      parts.push(humanTime(new Date(discussion.lastPostedAt)));
+    }
+
+    return parts.flatMap((part, i) => (i === 0 ? [part] : [m('span', { className: 'ForageRelated-dot' }, '·'), part]));
+  }
+
+  /** The forum's own search, for the rest of what this panel had to cut. */
+  more(): Mithril.Children {
+    return m(
+      Link,
+      { className: 'ForageRelated-more', href: app.route('index', { q: this.attrs.title }) },
+      app.translator.trans('linkrobins-forage.forum.related_more')
     );
   }
 
