@@ -42,11 +42,7 @@ export default class ComposerRelated extends Component<ComposerRelatedAttrs> {
    * is nothing yet to show.
    */
   view() {
-    return m(
-      'div',
-      { className: 'ForageComposerRelated' },
-      this.dismissed || !this.discussions.length ? null : this.panel()
-    );
+    return m('div', { className: 'ForageComposerRelated' }, this.dismissed || !this.discussions.length ? null : this.panel());
   }
 
   onupdate(vnode: Mithril.VnodeDOM<ComposerRelatedAttrs, this>) {
