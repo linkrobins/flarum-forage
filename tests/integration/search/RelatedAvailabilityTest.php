@@ -9,6 +9,7 @@
 
 namespace LinkRobins\Forage\Tests\integration\search;
 
+use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use LinkRobins\Forage\Settings;
@@ -113,6 +114,52 @@ class RelatedAvailabilityTest extends TestCase
         $this->setting(Settings::RELATED_DISCUSSION, '');
 
         $this->assertFalse($this->available());
+    }
+
+    /**
+     * The admin page falls back to a setting's registered default whenever the
+     * stored value is empty, and Flarum's own settings endpoint stores a JSON
+     * false as '' on MariaDB. Left alone, an admin would switch a panel off,
+     * save, and find the switch back on next time while the panel really was
+     * off.
+     *
+     * @test
+     */
+    #[Test]
+    public function switching_a_panel_off_stores_something_the_admin_page_reads_back_as_off(): void
+    {
+        $this->connected();
+
+        $response = $this->send(
+            $this->request('POST', '/api/settings', ['authenticatedAs' => 1])
+                ->withParsedBody([Settings::RELATED_COMPOSER => false])
+        );
+
+        $this->assertEquals(204, $response->getStatusCode());
+
+        $stored = $this->app()->getContainer()->make(SettingsRepositoryInterface::class)
+            ->get(Settings::RELATED_COMPOSER);
+
+        $this->assertSame('0', $stored);
+        $this->assertFalse($this->available('forageRelatedComposer'));
+    }
+
+    /** @test */
+    #[Test]
+    public function switching_a_panel_back_on_stores_the_other_one(): void
+    {
+        $this->connected();
+
+        $this->send(
+            $this->request('POST', '/api/settings', ['authenticatedAs' => 1])
+                ->withParsedBody([Settings::RELATED_COMPOSER => true])
+        );
+
+        $stored = $this->app()->getContainer()->make(SettingsRepositoryInterface::class)
+            ->get(Settings::RELATED_COMPOSER);
+
+        $this->assertSame('1', $stored);
+        $this->assertTrue($this->available('forageRelatedComposer'));
     }
 
     protected function connected(): void

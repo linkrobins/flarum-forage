@@ -8,6 +8,7 @@ use Flarum\Post\Filter\PostSearcher;
 use Flarum\Search\Database\DatabaseSearchDriver;
 use Flarum\Settings\Event\Deserializing;
 use Flarum\Settings\Event\Saved;
+use Flarum\Settings\Event\Serializing;
 use LinkRobins\Forage\Api\Controller\RelatedController;
 use LinkRobins\Forage\Api\Controller\RetryController;
 use LinkRobins\Forage\Api\Controller\StatusController;
@@ -16,6 +17,7 @@ use LinkRobins\Forage\Api\RelatedThrottler;
 use LinkRobins\Forage\Console\ReindexCommand;
 use LinkRobins\Forage\Listener\ExchangeSetupToken;
 use LinkRobins\Forage\Listener\HideKeysFromAdmin;
+use LinkRobins\Forage\Listener\NormalizeSwitches;
 use LinkRobins\Forage\Listener\SyncIndex;
 use LinkRobins\Forage\Search\DiscussionFulltextFilter;
 use LinkRobins\Forage\Search\PostFulltextFilter;
@@ -84,7 +86,8 @@ return [
     (new Extend\Event())
         ->subscribe(SyncIndex::class)
         ->listen(Saved::class, ExchangeSetupToken::class)
-        ->listen(Deserializing::class, HideKeysFromAdmin::class),
+        ->listen(Deserializing::class, HideKeysFromAdmin::class)
+        ->listen(Serializing::class, NormalizeSwitches::class),
 
     (new Extend\Routes('api'))
         ->get('/linkrobins-forage/status', 'linkrobins-forage.status', StatusController::class)
