@@ -59,7 +59,20 @@ export default class ComposerRelated extends Component<ComposerRelatedAttrs> {
    * somebody stopped typing.
    */
   view() {
-    return m('div', { className: 'ForageComposerRelated' }, !this.open || !this.discussions.length ? null : this.panel());
+    return m(
+      'div',
+      {
+        className: 'ForageComposerRelated',
+        // The wrapper is always here and its contents arrive on their own, a
+        // few hundred milliseconds after somebody stops typing, so a screen
+        // reader is told rather than left to find them. Polite, because it
+        // interrupts a member in the middle of writing a title: it waits for a
+        // pause in what is already being read out.
+        role: 'status',
+        'aria-live': 'polite',
+      },
+      !this.open || !this.discussions.length ? null : this.panel()
+    );
   }
 
   oncreate(vnode: Mithril.VnodeDOM<ComposerRelatedAttrs, this>) {

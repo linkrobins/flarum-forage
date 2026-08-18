@@ -24,6 +24,9 @@ A banner at the top of the settings page tells you where you stand:
 - **Cannot reach your search server**, which means everything is set up but the
   server is not answering right now
 
+Two switches sit under the key, both on to begin with: *Show related discussions
+under each thread* and *Suggest similar discussions while someone writes*.
+
 A Forage subscription is what the setup key comes from:
 [linkrobins.com/forage](https://linkrobins.com/forage).
 
@@ -35,12 +38,18 @@ Flarum only reaches for a search driver when there is a query, so tag pages,
 sorting and everything else still run against your database exactly as before.
 
 **Related discussions.** Under every discussion, a short list of others like it,
-built from the same index. And while somebody is starting a new discussion, the
-same list appears under the title as they type it, so a question that has been
-asked before can be found before it is asked again. Both are suggestions and
-nothing more: nobody is stopped from posting, the list can be hidden, and when
-the search server has nothing to offer no panel appears at all. Included on
-every plan.
+built from the same index, with when each one was last posted in. *See more*
+opens the rest in a window without leaving the page. And while somebody is
+starting a new discussion, a few existing ones with similar titles appear under
+the title box as they type, so a question that has been asked before can be
+found before it is asked again.
+
+Both are suggestions and nothing more. Nobody is stopped from posting, the
+suggestions beside the composer go away on a click anywhere else or on the X and
+come back when the title changes, and when the search server has nothing to
+offer no panel appears at all. Each one has its own switch on the settings page,
+both on to begin with, so you can keep the list under a discussion and turn off
+the one beside the composer, or the other way round. Included on every plan.
 
 **Indexing.** Every post is kept in step automatically: written, edited, hidden,
 restored, approved, deleted. Renaming a discussion re-indexes its posts, because
