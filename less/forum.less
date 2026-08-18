@@ -80,18 +80,24 @@
     opacity: 0.6;
   }
 
+  // A control, drawn like one. It was a muted text link, which is what made it
+  // read as a way off the page rather than a way to see the rest.
   &-more {
-    display: inline-block;
-    margin-top: 12px;
-    padding: 0;
-    font-size: calc(0.85rem * var(--lr-ui-scale, 1));
-    font-weight: 400;
-    color: var(--muted-color);
+    margin-top: 14px;
+  }
+}
 
-    &:hover,
-    &:focus {
-      color: var(--link-color);
-    }
+// The rest of the list, on its own surface.
+.ForageRelatedModal {
+  .Modal-body {
+    // Fifteen rows is taller than a short window, and a modal that runs off the
+    // screen has no way back to its own close button.
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .ForageRelated-item:first-child {
+    padding-top: 0;
   }
 }
 

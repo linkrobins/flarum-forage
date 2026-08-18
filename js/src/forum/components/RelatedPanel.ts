@@ -1,9 +1,9 @@
 import app from 'flarum/forum/app';
 import Button from 'flarum/common/components/Button';
 import Component from 'flarum/common/Component';
-import Link from 'flarum/common/components/Link';
-import humanTime from 'flarum/common/helpers/humanTime';
 import loadRelated from '../loadRelated';
+import relatedRow from '../relatedRow';
+import RelatedModal from './RelatedModal';
 import type { RelatedDiscussion } from '../loadRelated';
 import type Mithril from 'mithril';
 
@@ -11,9 +11,8 @@ export interface RelatedPanelAttrs {
   discussionId: number;
 }
 
-/** What the footer shows, and what "more like this" asks for. Both bounded server side. */
+/** What the footer shows. The modal asks for the rest. */
 const FOOTER_LIMIT = 5;
-const EXPANDED_LIMIT = 15;
 
 /**
  * The "related discussions" list under a discussion.
@@ -33,11 +32,6 @@ export default class RelatedPanel extends Component<RelatedPanelAttrs> {
    * Without this the panel would keep showing the previous thread's relatives.
    */
   loadedFor: number | null = null;
-
-  /** Whether the list has already been expanded, and whether it is expanding. */
-  expanded = false;
-
-  expanding = false;
 
   oninit(vnode: Mithril.Vnode<RelatedPanelAttrs, this>) {
     super.oninit(vnode);
@@ -64,102 +58,33 @@ export default class RelatedPanel extends Component<RelatedPanelAttrs> {
       'section',
       { className: 'ForageRelated' },
       m('h3', { className: 'ForageRelated-heading' }, app.translator.trans('linkrobins-forage.forum.related_heading')),
-      m(
-        'ul',
-        { className: 'ForageRelated-list' },
-        this.discussions.map((discussion) =>
-          m(
-            'li',
-            { className: 'ForageRelated-item' },
-            m(
-              Link,
-              { className: 'ForageRelated-link', href: app.route('discussion', { id: discussion.id + '-' + discussion.slug }) },
-              discussion.title
-            ),
-            m('span', { className: 'ForageRelated-meta' }, this.meta(discussion))
-          )
-        )
-      ),
+      m('ul', { className: 'ForageRelated-list' }, this.discussions.map(relatedRow)),
       this.more()
     );
   }
 
   /**
-   * What each row says about itself.
+   * The rest of what five rows had to cut.
    *
-   * A reply count only when there are replies: most threads on a quiet forum
-   * have none, and a list recommending them should not open by saying so. When
-   * it was last posted in is worth showing either way, so it always is.
-   */
-  meta(discussion: RelatedDiscussion): Mithril.Children {
-    const parts: Mithril.Children[] = [];
-
-    // Core counts the opening post in commentCount and shows one fewer as the
-    // reply count; match it rather than invent a number.
-    const replies = Math.max(0, discussion.commentCount - 1);
-
-    if (replies > 0) {
-      parts.push(app.translator.trans('linkrobins-forage.forum.related_replies', { count: replies }));
-    }
-
-    if (discussion.lastPostedAt) {
-      parts.push(humanTime(new Date(discussion.lastPostedAt)));
-    }
-
-    return parts.flatMap((part, i) => (i === 0 ? [part] : [m('span', { className: 'ForageRelated-dot' }, '·'), part]));
-  }
-
-  /**
-   * The rest of what five rows had to cut, fetched in place.
-   *
-   * Not a link to the forum's search for the same title, which was the first
-   * shape of this: that search always answers with the discussion being read,
-   * at the top, because it is the best match for its own title. Asking here
-   * cannot do that, and the candidates behind it are already cached, so it
-   * costs the search server nothing.
+   * Opens a modal rather than growing the list underneath the reader. The
+   * footer's five are a glance on the way past; asking for the rest is a
+   * deliberate act, and a control that quietly reflowed the page was read as a
+   * link to somewhere else. It only appears when the footer was actually cut
+   * short.
    */
   more(): Mithril.Children {
-    if (this.expanded || this.discussions.length < FOOTER_LIMIT) {
+    if (this.discussions.length < FOOTER_LIMIT) {
       return null;
     }
 
-    // The text goes in as children: core's Button reads its label from those,
-    // and an attribute named label is just an attribute, which renders a button
-    // with nothing in it.
     return m(
       Button,
       {
-        className: 'Button Button--link ForageRelated-more',
-        loading: this.expanding,
-        onclick: () => this.expand(),
+        className: 'Button ForageRelated-more',
+        onclick: () => app.modal.show(RelatedModal, { discussionId: this.attrs.discussionId }),
       },
       app.translator.trans('linkrobins-forage.forum.related_more')
     );
-  }
-
-  expand() {
-    const discussionId = this.attrs.discussionId;
-
-    this.expanding = true;
-
-    loadRelated({ discussion: discussionId, limit: EXPANDED_LIMIT }).then((discussions) => {
-      this.expanding = false;
-
-      // Navigated on while this was in the air.
-      if (this.loadedFor !== discussionId) {
-        return;
-      }
-
-      // Marked expanded either way: a forum with nothing more to give should
-      // not keep offering.
-      this.expanded = true;
-
-      if (discussions.length) {
-        this.discussions = discussions;
-      }
-
-      m.redraw();
-    });
   }
 
   load(discussionId: number) {
@@ -167,8 +92,6 @@ export default class RelatedPanel extends Component<RelatedPanelAttrs> {
     // start the same load again.
     this.loadedFor = discussionId;
     this.discussions = [];
-    this.expanded = false;
-    this.expanding = false;
 
     if (!discussionId) {
       return;
