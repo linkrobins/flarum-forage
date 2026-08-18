@@ -103,6 +103,16 @@
     background: var(--body-bg);
     border-radius: var(--border-radius);
     box-shadow: 0 2px 6px var(--shadow-color);
+
+    // On a phone the composer's rows carry their own gutter and this one's
+    // does not, since the row it sits in was flattened above. Inset it by hand
+    // so the panel lines up with the title instead of touching both edges.
+    // Core's phone breakpoint, written out: its LESS variables are not in
+    // scope here, and neither is @phone.
+    @media (max-width: 767.98px) {
+      left: 15px;
+      right: 15px;
+    }
   }
 
   &-header {
