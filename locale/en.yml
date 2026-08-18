@@ -80,7 +80,7 @@ linkrobins-forage:
       search. Upgrading your plan raises the limit.
 
   forum:
-    related_heading: Related discussions
+    related_heading: Related Discussions
     related_replies: "{count, plural, one {# reply} other {# replies}}"
     related_more: More like this
 
