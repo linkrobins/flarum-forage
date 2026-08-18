@@ -1,4 +1,5 @@
 import app from 'flarum/forum/app';
+import Button from 'flarum/common/components/Button';
 import Component from 'flarum/common/Component';
 import Link from 'flarum/common/components/Link';
 import loadRelated from '../loadRelated';
@@ -123,18 +124,18 @@ export default class ComposerRelated extends Component<ComposerRelatedAttrs> {
         'div',
         { className: 'ForageComposerRelated-header' },
         m('span', { className: 'ForageComposerRelated-heading' }, app.translator.trans('linkrobins-forage.forum.composer_heading')),
-        m(
-          'button',
-          {
-            className: 'Button Button--link ForageComposerRelated-dismiss',
-            type: 'button',
-            onclick: () => {
-              this.dismissed = true;
-              this.open = false;
-            },
+        m(Button, {
+          className: 'Button Button--link Button--icon ForageComposerRelated-dismiss',
+          icon: 'fas fa-times',
+          // Icon only, so the name of the thing lives in the label rather than
+          // beside it. Core's own dismissals are shaped the same way.
+          'aria-label': app.translator.trans('linkrobins-forage.forum.composer_dismiss'),
+          title: app.translator.trans('linkrobins-forage.forum.composer_dismiss'),
+          onclick: () => {
+            this.dismissed = true;
+            this.open = false;
           },
-          app.translator.trans('linkrobins-forage.forum.composer_dismiss')
-        )
+        })
       ),
       m(
         'ul',

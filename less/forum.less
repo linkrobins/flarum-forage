@@ -128,10 +128,18 @@
     color: var(--muted-color);
   }
 
+  // Icon only, and quiet: it sits next to a heading, not next to the titles
+  // somebody is here to read.
   &-dismiss {
     padding: 0;
+    margin: -4px -2px -4px 0;
     font-size: calc(0.85rem * var(--lr-ui-scale, 1));
     color: var(--muted-color);
+
+    &:hover,
+    &:focus {
+      color: var(--text-color);
+    }
   }
 
   &-list {

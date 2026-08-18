@@ -84,4 +84,4 @@ linkrobins-forage:
     related_replies: "{count, plural, one {# reply} other {# replies}}"
 
     composer_heading: Similar discussions
-    composer_dismiss: Hide
+    composer_dismiss: Hide these suggestions
