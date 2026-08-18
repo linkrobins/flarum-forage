@@ -123,12 +123,18 @@ export default class RelatedPanel extends Component<RelatedPanelAttrs> {
       return null;
     }
 
-    return m(Button, {
-      className: 'Button Button--link ForageRelated-more',
-      loading: this.expanding,
-      onclick: () => this.expand(),
-      label: app.translator.trans('linkrobins-forage.forum.related_more'),
-    });
+    // The text goes in as children: core's Button reads its label from those,
+    // and an attribute named label is just an attribute, which renders a button
+    // with nothing in it.
+    return m(
+      Button,
+      {
+        className: 'Button Button--link ForageRelated-more',
+        loading: this.expanding,
+        onclick: () => this.expand(),
+      },
+      app.translator.trans('linkrobins-forage.forum.related_more')
+    );
   }
 
   expand() {
