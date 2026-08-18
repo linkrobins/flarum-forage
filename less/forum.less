@@ -2,14 +2,20 @@
 //
 // Deliberately quiet: this sits under somebody else's thread and beside
 // somebody else's composer, so it borrows the theme's own surface and muted
-// text rather than introducing a colour of its own. Nothing here is branded —
+// text rather than introducing a colour of its own. Nothing here is branded:
 // a forum owner paid for search, not for a logo on their discussion pages.
+//
+// Colours come through CSS custom properties, never LESS variables. Flarum 2.0
+// compiles an extension's LESS without core's variables in scope, so an @-name
+// here is not a wrong colour, it is a compile error that takes the whole forum
+// frontend down with it. Custom properties also follow the reader's light or
+// dark mode without this file knowing which is on.
 
 .ForageRelated {
   margin: 20px 0 0;
   padding: 16px 20px;
-  background: @control-bg;
-  border-radius: @border-radius;
+  background: var(--control-bg);
+  border-radius: var(--border-radius);
 
   &-heading {
     margin: 0 0 10px;
@@ -17,7 +23,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: @muted-color;
+    color: var(--muted-color);
   }
 
   &-list {
@@ -32,8 +38,10 @@
     gap: 10px;
     padding: 6px 0;
 
+    // Against the panel's own surface, which is what core separates lists
+    // with in the other direction.
     & + & {
-      border-top: 1px solid fade(@muted-color, 15%);
+      border-top: 1px solid var(--body-bg);
     }
   }
 
@@ -42,13 +50,13 @@
   &-link {
     flex: 1 1 auto;
     font-size: calc(1rem * var(--lr-text-scale, 1));
-    color: @link-color;
+    color: var(--link-color);
   }
 
   &-count {
     flex: 0 0 auto;
     font-size: calc(0.85rem * var(--lr-ui-scale, 1));
-    color: @muted-color;
+    color: var(--muted-color);
     white-space: nowrap;
   }
 }
@@ -58,8 +66,8 @@
   &-panel {
     margin: 8px 0 0;
     padding: 10px 12px;
-    background: fade(@muted-color, 8%);
-    border-radius: @border-radius;
+    background: var(--control-bg);
+    border-radius: var(--border-radius);
   }
 
   &-header {
@@ -72,13 +80,13 @@
   &-heading {
     font-size: calc(0.85rem * var(--lr-ui-scale, 1));
     font-weight: 600;
-    color: @muted-color;
+    color: var(--muted-color);
   }
 
   &-dismiss {
     padding: 0;
     font-size: calc(0.85rem * var(--lr-ui-scale, 1));
-    color: @muted-color;
+    color: var(--muted-color);
   }
 
   &-list {
