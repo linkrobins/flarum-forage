@@ -2,7 +2,7 @@ import app from 'flarum/forum/app';
 import { extend } from 'flarum/common/extend';
 import ComposerRelated from './forum/components/ComposerRelated';
 import RelatedPanel from './forum/components/RelatedPanel';
-import { relatedEnabled } from './forum/loadRelated';
+import { relatedInComposer, relatedUnderDiscussion } from './forum/loadRelated';
 import type ItemList from 'flarum/common/utils/ItemList';
 import type Mithril from 'mithril';
 
@@ -13,7 +13,7 @@ app.initializers.add('linkrobins/forage', () => {
    * and undo the code splitting Flarum does for both.
    */
   extend('flarum/forum/components/DiscussionPage', 'view', function (this: any, vnode: Mithril.Vnode<any, any>) {
-    if (!relatedEnabled() || this.loading || !this.discussion || !vnode) {
+    if (!relatedUnderDiscussion() || this.loading || !this.discussion || !vnode) {
       return;
     }
 
@@ -27,7 +27,7 @@ app.initializers.add('linkrobins/forage', () => {
   });
 
   extend('flarum/forum/components/DiscussionComposer', 'headerItems', function (this: any, items: ItemList<Mithril.Children>) {
-    if (!relatedEnabled()) {
+    if (!relatedInComposer()) {
       return;
     }
 

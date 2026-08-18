@@ -52,10 +52,10 @@ class RelatedAvailabilityTest extends TestCase
     #[Test]
     public function a_connected_forum_says_the_panels_are_on(): void
     {
-        $this->setting(Settings::ENDPOINT, 'https://search.example.invalid');
-        $this->setting(Settings::SEARCH_KEY, 'a-search-key');
+        $this->connected();
 
         $this->assertTrue($this->available());
+        $this->assertTrue($this->available('forageRelatedComposer'));
     }
 
     /**
@@ -72,7 +72,56 @@ class RelatedAvailabilityTest extends TestCase
         $this->assertFalse($this->available());
     }
 
-    protected function available(): mixed
+    /**
+     * An admin who wants the list under a thread but not the one that
+     * interrupts the composer, and the other way round. Each panel asks its own
+     * question of the payload, so each has to be able to answer differently.
+     *
+     * @test
+     */
+    #[Test]
+    public function each_panel_can_be_switched_off_on_its_own(): void
+    {
+        $this->connected();
+        $this->setting(Settings::RELATED_COMPOSER, false);
+
+        $this->assertTrue($this->available());
+        $this->assertFalse($this->available('forageRelatedComposer'));
+    }
+
+    /** @test */
+    #[Test]
+    public function the_panel_under_a_discussion_can_be_switched_off(): void
+    {
+        $this->connected();
+        $this->setting(Settings::RELATED_DISCUSSION, false);
+
+        $this->assertFalse($this->available());
+        $this->assertTrue($this->available('forageRelatedComposer'));
+    }
+
+    /**
+     * What a saved-off switch leaves in the settings table depends on the
+     * driver, and an empty string must not read as "never set".
+     *
+     * @test
+     */
+    #[Test]
+    public function an_empty_string_is_off_not_unset(): void
+    {
+        $this->connected();
+        $this->setting(Settings::RELATED_DISCUSSION, '');
+
+        $this->assertFalse($this->available());
+    }
+
+    protected function connected(): void
+    {
+        $this->setting(Settings::ENDPOINT, 'https://search.example.invalid');
+        $this->setting(Settings::SEARCH_KEY, 'a-search-key');
+    }
+
+    protected function available(string $attribute = 'forageRelated'): mixed
     {
         $response = $this->send($this->request('GET', '/api'));
 
@@ -80,6 +129,6 @@ class RelatedAvailabilityTest extends TestCase
 
         $body = json_decode((string) $response->getBody(), true);
 
-        return $body['data']['attributes']['forageRelated'] ?? null;
+        return $body['data']['attributes'][$attribute] ?? null;
     }
 }

@@ -8,17 +8,22 @@ export interface RelatedDiscussion {
 }
 
 /**
- * Whether this forum can answer at all.
+ * Whether the list under a discussion is on for this forum.
  *
- * A forum with no key, a lapsed plan or a tenant still provisioning would
- * answer every one of these requests with an empty list, so the panels do not
- * ask: the boolean rides along on the forum payload the page already loaded,
- * and saves a full Flarum boot per discussion view and per pause in the
- * composer. Read at render time, never in an initializer, because app.forum is
+ * A forum with no key, a lapsed plan, a tenant still provisioning or an admin
+ * who switched the panel off would answer every one of these requests with an
+ * empty list, so the panel does not ask: the boolean rides along on the forum
+ * payload the page already loaded, and saves a full Flarum boot per discussion
+ * view. Read at render time, never in an initializer, because app.forum is
  * built after those run.
  */
-export function relatedEnabled(): boolean {
+export function relatedUnderDiscussion(): boolean {
   return !!app.forum?.attribute('forageRelated');
+}
+
+/** The same question for the composer, which has its own switch. */
+export function relatedInComposer(): boolean {
+  return !!app.forum?.attribute('forageRelatedComposer');
 }
 
 /**

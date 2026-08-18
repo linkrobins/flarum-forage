@@ -6,6 +6,7 @@ use Flarum\Discussion\Discussion;
 use Flarum\User\User;
 use Illuminate\Contracts\Cache\Repository as Cache;
 use LinkRobins\Forage\ForageClient;
+use LinkRobins\Forage\Settings;
 
 /**
  * Discussions that look like a given piece of text.
@@ -62,7 +63,8 @@ class RelatedDiscussions
     public function __construct(
         protected ForageClient $client,
         protected ForageResults $results,
-        protected Cache $cache
+        protected Cache $cache,
+        protected Settings $settings
     ) {
     }
 
@@ -73,6 +75,13 @@ class RelatedDiscussions
      */
     public function forDiscussion(User $actor, Discussion $source, int $limit = self::FOOTER_LIMIT): array
     {
+        // The frontend already knows this is off and does not ask. Checked
+        // again here because the endpoint is open to anyone who can type a URL,
+        // and a switched-off panel should not still be reachable through one.
+        if (! $this->settings->relatedUnderDiscussion()) {
+            return [];
+        }
+
         $title = (string) $source->title;
 
         $stamp = $source->last_posted_at?->getTimestamp() ?? 0;
@@ -92,6 +101,10 @@ class RelatedDiscussions
      */
     public function forQuery(User $actor, string $query, int $limit = self::COMPOSER_LIMIT): array
     {
+        if (! $this->settings->relatedInComposer()) {
+            return [];
+        }
+
         if (mb_strlen(trim($query)) < self::MIN_QUERY_LENGTH) {
             return [];
         }

@@ -13,12 +13,16 @@ use Flarum\Api\Schema;
 use LinkRobins\Forage\Settings;
 
 /**
- * Tells the forum frontend whether related discussions can be answered at all.
+ * Tells the forum frontend whether each related-discussions panel is on.
+ *
+ * Two answers rather than one, because an admin can keep the list under a
+ * discussion and switch off the one that interrupts the composer, or the other
+ * way round.
  *
  * Without this the panels would ask on every discussion page and every pause in
- * the composer of a forum that has no key, has let one lapse, or is still
- * provisioning — a full Flarum boot per request, for a list that is always
- * going to be empty.
+ * the composer of a forum that has no key, has let one lapse, is still
+ * provisioning, or simply does not want them: a full Flarum boot per request,
+ * for a list that is always going to be empty.
  *
  * Fail-closed, because this rides on every forum response: anything unexpected
  * reads as "not available" rather than 500ing the boot payload.
@@ -34,13 +38,22 @@ class ForumFields
     {
         return [
             Schema\Boolean::make('forageRelated')
-                ->get(function (): bool {
-                    try {
-                        return $this->settings->canSearch();
-                    } catch (\Throwable) {
-                        return false;
-                    }
-                }),
+                ->get(fn (): bool => $this->on($this->settings->relatedUnderDiscussion(...))),
+
+            Schema\Boolean::make('forageRelatedComposer')
+                ->get(fn (): bool => $this->on($this->settings->relatedInComposer(...))),
         ];
+    }
+
+    /**
+     * @param callable(): bool $switch
+     */
+    private function on(callable $switch): bool
+    {
+        try {
+            return $this->settings->canSearch() && $switch();
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }
