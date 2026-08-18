@@ -91,6 +91,11 @@ export default class ComposerRelated extends Component<ComposerRelatedAttrs> {
 
     // Asking again. Whatever put the panel away, going back to the field it
     // belongs to is how a member gets it back without retyping the title.
+    //
+    // On both a click and a focus, because either one on its own leaves a hole:
+    // Escape puts the panel away without moving focus, so clicking the title
+    // afterwards focuses nothing that was not focused already and fires no
+    // focus event, while tabbing back into the field is a focus with no click.
     const back = (e: Event) => {
       const target = e.target as HTMLElement | null;
 
@@ -103,11 +108,13 @@ export default class ComposerRelated extends Component<ComposerRelatedAttrs> {
     };
 
     document.addEventListener('pointerdown', away, true);
+    document.addEventListener('pointerdown', back, true);
     document.addEventListener('keydown', escape, true);
     document.addEventListener('focusin', back, true);
 
     this.detach = [
       () => document.removeEventListener('pointerdown', away, true),
+      () => document.removeEventListener('pointerdown', back, true),
       () => document.removeEventListener('keydown', escape, true),
       () => document.removeEventListener('focusin', back, true),
     ];
