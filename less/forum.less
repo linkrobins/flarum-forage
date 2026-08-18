@@ -62,12 +62,43 @@
 }
 
 // The composer's copy of the same idea. Tighter, because it is interrupting.
+//
+// It FLOATS, like a typeahead under the field that asked for it, rather than
+// sitting in the flow. Suggestions arrive on a pause in typing and leave again
+// on the next keystroke, and in the flow that slid the whole post down and back
+// while somebody was writing in it. Nothing moves now.
+
+// The item core wraps around this one is meant to hold a control, so it comes
+// with a row's worth of layout: an inline-block that shrinks to its contents on
+// a desktop, and a padded, bordered row of its own on a phone. This one holds
+// something absolutely positioned, so it should take a full-width line and draw
+// nothing at all.
+.ComposerBody-header > li:has(> .ForageComposerRelated) {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 .ForageComposerRelated {
+  position: relative;
+  width: 100%;
+
   &-panel {
-    margin: 8px 0 0;
+    position: absolute;
+    top: 2px;
+    left: 0;
+    right: 0;
+    // Above the editor it covers, below anything core layers over the whole
+    // composer.
+    z-index: 3;
     padding: 10px 12px;
-    background: var(--control-bg);
+    // Opaque, and lifted the way core lifts a dropdown: this one is over
+    // somebody's draft, so text must not show through it.
+    background: var(--body-bg);
     border-radius: var(--border-radius);
+    box-shadow: 0 2px 6px var(--shadow-color);
   }
 
   &-header {

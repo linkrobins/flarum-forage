@@ -27,22 +27,71 @@ const MIN_LENGTH = 4;
 export default class ComposerRelated extends Component<ComposerRelatedAttrs> {
   discussions: RelatedDiscussion[] = [];
 
+  /** Hidden for good, by the button. A member who says no meant it. */
   dismissed = false;
+
+  /**
+   * Showing right now.
+   *
+   * Separate from dismissed because it floats over the editor: clicking into
+   * the post, pressing Escape or clicking anywhere else has to put it away, and
+   * none of those mean "never show me this again". The next title does bring it
+   * back.
+   */
+  private open = false;
 
   /** The title text the current suggestions were asked for. */
   private seen = '';
 
   private timer: ReturnType<typeof setTimeout> | null = null;
 
+  private detach: Array<() => void> = [];
+
   /**
    * The wrapper is rendered even while empty.
    *
    * A component whose view returns null has no DOM, and onupdate is what drives
-   * the debounce — so an empty wrapper is what keeps this listening while there
-   * is nothing yet to show.
+   * the debounce, so an empty wrapper is what keeps this listening while there
+   * is nothing yet to show. It is also what the panel is positioned against:
+   * the panel floats over the editor rather than pushing it down the page, so
+   * nothing moves when suggestions arrive four hundred milliseconds after
+   * somebody stopped typing.
    */
   view() {
-    return m('div', { className: 'ForageComposerRelated' }, this.dismissed || !this.discussions.length ? null : this.panel());
+    return m('div', { className: 'ForageComposerRelated' }, this.dismissed || !this.open || !this.discussions.length ? null : this.panel());
+  }
+
+  oncreate(vnode: Mithril.VnodeDOM<ComposerRelatedAttrs, this>) {
+    super.oncreate(vnode);
+
+    // Capture phase, so a handler that stops propagation on its way up cannot
+    // leave the panel floating over the editor with nothing to close it.
+    const away = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+
+      if (!this.open || !target) {
+        return;
+      }
+
+      // Typing in the title is what asked for this, so it does not count as
+      // clicking away.
+      if (vnode.dom.contains(target) || target.closest('.DiscussionComposer-title')) {
+        return;
+      }
+
+      this.close();
+    };
+
+    const escape = (e: KeyboardEvent) => {
+      if (this.open && e.key === 'Escape') {
+        this.close();
+      }
+    };
+
+    document.addEventListener('pointerdown', away, true);
+    document.addEventListener('keydown', escape, true);
+
+    this.detach = [() => document.removeEventListener('pointerdown', away, true), () => document.removeEventListener('keydown', escape, true)];
   }
 
   onupdate(vnode: Mithril.VnodeDOM<ComposerRelatedAttrs, this>) {
@@ -62,6 +111,8 @@ export default class ComposerRelated extends Component<ComposerRelatedAttrs> {
     super.onremove(vnode);
 
     this.clear();
+    this.detach.forEach((off) => off());
+    this.detach = [];
   }
 
   panel(): Mithril.Children {
@@ -79,6 +130,7 @@ export default class ComposerRelated extends Component<ComposerRelatedAttrs> {
             type: 'button',
             onclick: () => {
               this.dismissed = true;
+              this.open = false;
             },
           },
           app.translator.trans('linkrobins-forage.forum.composer_dismiss')
@@ -124,9 +176,15 @@ export default class ComposerRelated extends Component<ComposerRelatedAttrs> {
         }
 
         this.discussions = discussions;
+        this.open = discussions.length > 0;
         m.redraw();
       });
     }, DEBOUNCE_MS);
+  }
+
+  private close() {
+    this.open = false;
+    m.redraw();
   }
 
   private clear() {
