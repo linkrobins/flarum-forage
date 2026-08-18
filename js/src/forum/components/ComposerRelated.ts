@@ -21,23 +21,23 @@ const MIN_LENGTH = 4;
  * "Has this been asked before?" under the new-discussion title field.
  *
  * Advisory, always. It never disables the button, never blocks submission and
- * can be dismissed outright, because the match behind it is lexical: two
- * threads sharing a few words are often nothing to do with each other, and a
- * feature that stops people posting on that evidence gets uninstalled.
+ * goes away on any gesture that says so, because the match behind it is
+ * lexical: two threads sharing a few words are often nothing to do with each
+ * other, and a feature that stops people posting on that evidence gets
+ * uninstalled.
  */
 export default class ComposerRelated extends Component<ComposerRelatedAttrs> {
   discussions: RelatedDiscussion[] = [];
 
-  /** Hidden for good, by the button. A member who says no meant it. */
-  dismissed = false;
-
   /**
    * Showing right now.
    *
-   * Separate from dismissed because it floats over the editor: clicking into
-   * the post, pressing Escape or clicking anywhere else has to put it away, and
-   * none of those mean "never show me this again". The next title does bring it
-   * back.
+   * Nothing here closes it for good. It floats over the editor, so clicking
+   * into the post, pressing Escape, clicking anywhere else and the dismiss
+   * button all have to put it away, and none of those mean "never again":
+   * closing a typeahead is not a decision, it is getting it out of the way.
+   * Changing the title brings it back, and so does clicking back into the
+   * title, which is the gesture a member has for asking again.
    */
   private open = false;
 
@@ -59,7 +59,7 @@ export default class ComposerRelated extends Component<ComposerRelatedAttrs> {
    * somebody stopped typing.
    */
   view() {
-    return m('div', { className: 'ForageComposerRelated' }, this.dismissed || !this.open || !this.discussions.length ? null : this.panel());
+    return m('div', { className: 'ForageComposerRelated' }, !this.open || !this.discussions.length ? null : this.panel());
   }
 
   oncreate(vnode: Mithril.VnodeDOM<ComposerRelatedAttrs, this>) {
@@ -89,10 +89,28 @@ export default class ComposerRelated extends Component<ComposerRelatedAttrs> {
       }
     };
 
+    // Asking again. Whatever put the panel away, going back to the field it
+    // belongs to is how a member gets it back without retyping the title.
+    const back = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+
+      if (this.open || !this.discussions.length || !target?.closest('.DiscussionComposer-title')) {
+        return;
+      }
+
+      this.open = true;
+      m.redraw();
+    };
+
     document.addEventListener('pointerdown', away, true);
     document.addEventListener('keydown', escape, true);
+    document.addEventListener('focusin', back, true);
 
-    this.detach = [() => document.removeEventListener('pointerdown', away, true), () => document.removeEventListener('keydown', escape, true)];
+    this.detach = [
+      () => document.removeEventListener('pointerdown', away, true),
+      () => document.removeEventListener('keydown', escape, true),
+      () => document.removeEventListener('focusin', back, true),
+    ];
   }
 
   onupdate(vnode: Mithril.VnodeDOM<ComposerRelatedAttrs, this>) {
@@ -131,10 +149,7 @@ export default class ComposerRelated extends Component<ComposerRelatedAttrs> {
           // beside it. Core's own dismissals are shaped the same way.
           'aria-label': app.translator.trans('linkrobins-forage.forum.composer_dismiss'),
           title: app.translator.trans('linkrobins-forage.forum.composer_dismiss'),
-          onclick: () => {
-            this.dismissed = true;
-            this.open = false;
-          },
+          onclick: () => this.close(),
         })
       ),
       m(
