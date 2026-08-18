@@ -34,6 +34,14 @@ A Forage subscription is what the setup key comes from:
 Flarum only reaches for a search driver when there is a query, so tag pages,
 sorting and everything else still run against your database exactly as before.
 
+**Related discussions.** Under every discussion, a short list of others like it,
+built from the same index. And while somebody is starting a new discussion, the
+same list appears under the title as they type it, so a question that has been
+asked before can be found before it is asked again. Both are suggestions and
+nothing more: nobody is stopped from posting, the list can be hidden, and when
+the search server has nothing to offer no panel appears at all. Included on
+every plan.
+
 **Indexing.** Every post is kept in step automatically: written, edited, hidden,
 restored, approved, deleted. Renaming a discussion re-indexes its posts, because
 each post is indexed under its discussion's title. Hiding or deleting a
@@ -64,6 +72,8 @@ the server is back. The same is true before you have entered a key at all.
 ## What it does NOT do
 
 - It does not search users, tags, or anything but discussions and posts.
+- It does not block anyone from posting a duplicate. The similar-discussions
+  list beside the composer is advice, not a gate.
 - It does not change how results are displayed. Ranking comes from the search
   server; the page is Flarum's.
 - It does not send anything to the search server except the post text, its id,

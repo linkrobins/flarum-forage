@@ -66,3 +66,10 @@ linkrobins-forage:
       Your search server is holding {indexed} posts, which is the limit on your
       plan ({cap}). Newer posts aren't being added, so they won't turn up in
       search. Upgrading your plan raises the limit.
+
+  forum:
+    related_heading: Related discussions
+    related_replies: "{count, plural, one {# reply} other {# replies}}"
+
+    composer_heading: Similar discussions
+    composer_dismiss: Hide

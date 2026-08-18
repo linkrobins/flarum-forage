@@ -1,0 +1,97 @@
+// Related discussions.
+//
+// Deliberately quiet: this sits under somebody else's thread and beside
+// somebody else's composer, so it borrows the theme's own surface and muted
+// text rather than introducing a colour of its own. Nothing here is branded —
+// a forum owner paid for search, not for a logo on their discussion pages.
+
+.ForageRelated {
+  margin: 20px 0 0;
+  padding: 16px 20px;
+  background: @control-bg;
+  border-radius: @border-radius;
+
+  &-heading {
+    margin: 0 0 10px;
+    font-size: calc(0.9rem * var(--lr-ui-scale, 1));
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: @muted-color;
+  }
+
+  &-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &-item {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 6px 0;
+
+    & + & {
+      border-top: 1px solid fade(@muted-color, 15%);
+    }
+  }
+
+  // A discussion title is reading text, so it scales with the reader's text
+  // size rather than the chrome's.
+  &-link {
+    flex: 1 1 auto;
+    font-size: calc(1rem * var(--lr-text-scale, 1));
+    color: @link-color;
+  }
+
+  &-count {
+    flex: 0 0 auto;
+    font-size: calc(0.85rem * var(--lr-ui-scale, 1));
+    color: @muted-color;
+    white-space: nowrap;
+  }
+}
+
+// The composer's copy of the same idea. Tighter, because it is interrupting.
+.ForageComposerRelated {
+  &-panel {
+    margin: 8px 0 0;
+    padding: 10px 12px;
+    background: fade(@muted-color, 8%);
+    border-radius: @border-radius;
+  }
+
+  &-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  &-heading {
+    font-size: calc(0.85rem * var(--lr-ui-scale, 1));
+    font-weight: 600;
+    color: @muted-color;
+  }
+
+  &-dismiss {
+    padding: 0;
+    font-size: calc(0.85rem * var(--lr-ui-scale, 1));
+    color: @muted-color;
+  }
+
+  &-list {
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      padding: 3px 0;
+    }
+  }
+
+  &-link {
+    font-size: calc(0.95rem * var(--lr-text-scale, 1));
+  }
+}

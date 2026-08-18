@@ -39,14 +39,24 @@ class FakeForageClient extends ForageClient
         self::$indexed = [];
         self::$deleted = [];
         self::$deletedDiscussions = [];
+        self::$searches = 0;
+        self::$query = null;
     }
 
     /** @var string|null the collapse field the last search asked for */
     public static ?string $distinct = null;
 
+    /** @var string|null the text the last search was for */
+    public static ?string $query = null;
+
+    /** How many searches were actually sent, for the callers that avoid them. */
+    public static int $searches = 0;
+
     public function searchPostIds(string $query, int $limit = 200, ?string $distinct = null): ?array
     {
         self::$distinct = $distinct;
+        self::$query = $query;
+        self::$searches++;
 
         return self::$ids;
     }

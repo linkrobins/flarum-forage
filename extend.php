@@ -7,8 +7,10 @@ use Flarum\Post\Filter\PostSearcher;
 use Flarum\Search\Database\DatabaseSearchDriver;
 use Flarum\Settings\Event\Deserializing;
 use Flarum\Settings\Event\Saved;
+use LinkRobins\Forage\Api\Controller\RelatedController;
 use LinkRobins\Forage\Api\Controller\RetryController;
 use LinkRobins\Forage\Api\Controller\StatusController;
+use LinkRobins\Forage\Api\RelatedThrottler;
 use LinkRobins\Forage\Console\ReindexCommand;
 use LinkRobins\Forage\Listener\ExchangeSetupToken;
 use LinkRobins\Forage\Listener\HideKeysFromAdmin;
@@ -20,6 +22,15 @@ use LinkRobins\Forage\Search\PostIndexer;
 return [
     (new Extend\Frontend('admin'))
         ->js(__DIR__.'/js/dist/admin.js'),
+
+    /*
+     * The forum bundle exists for related discussions and nothing else. Search
+     * itself needs no frontend at all: it is answered by replacing a filter on
+     * the driver, so Flarum's own search box keeps working unchanged.
+     */
+    (new Extend\Frontend('forum'))
+        ->js(__DIR__.'/js/dist/forum.js')
+        ->css(__DIR__.'/less/forum.less'),
 
     new Extend\Locales(__DIR__.'/locale'),
 
@@ -68,7 +79,15 @@ return [
 
     (new Extend\Routes('api'))
         ->get('/linkrobins-forage/status', 'linkrobins-forage.status', StatusController::class)
-        ->post('/linkrobins-forage/retry', 'linkrobins-forage.retry', RetryController::class),
+        ->post('/linkrobins-forage/retry', 'linkrobins-forage.retry', RetryController::class)
+        ->get('/linkrobins-forage/related', 'linkrobins-forage.related', RelatedController::class),
+
+    /*
+     * Related discussions is the one route a member can drive at will, through
+     * the composer. Everything else here is admin-only or runs on the queue.
+     */
+    (new Extend\ThrottleApi())
+        ->set('linkrobins-forage.related', RelatedThrottler::class),
 
     (new Extend\Console())
         ->command(ReindexCommand::class),
