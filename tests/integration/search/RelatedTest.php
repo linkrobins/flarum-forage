@@ -13,6 +13,8 @@ use Flarum\Extend;
 use Flarum\Testing\integration\RetrievesAuthorizedUsers;
 use Flarum\Testing\integration\TestCase;
 use Illuminate\Contracts\Cache\Repository as Cache;
+use LinkRobins\Forage\Search\ForageResults;
+use LinkRobins\Forage\Search\RelatedDiscussions;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
@@ -208,6 +210,25 @@ class RelatedTest extends TestCase
         $this->assertSame('Alpha', $row['title']);
         $this->assertSame('alpha', $row['slug']);
         $this->assertSame(3, $row['commentCount']);
+    }
+
+    /**
+     * Five titles are rendered from this list, and every candidate in it is
+     * carried into an IN clause on every discussion page view and kept in the
+     * cache for a day. Search's own ceiling is a paging one and far too big to
+     * borrow here.
+     *
+     * @test
+     */
+    #[Test]
+    public function far_fewer_candidates_are_asked_for_than_a_search_asks_for(): void
+    {
+        FakeForageClient::$ids = [1, 2];
+
+        $this->related(['discussion' => 1]);
+
+        $this->assertSame(RelatedDiscussions::CANDIDATE_HITS, FakeForageClient::$limit);
+        $this->assertLessThan(ForageResults::MAX_HITS, FakeForageClient::$limit);
     }
 
     /**

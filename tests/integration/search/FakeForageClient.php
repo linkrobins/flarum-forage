@@ -41,6 +41,7 @@ class FakeForageClient extends ForageClient
         self::$deletedDiscussions = [];
         self::$searches = 0;
         self::$query = null;
+        self::$limit = null;
     }
 
     /** @var string|null the collapse field the last search asked for */
@@ -52,10 +53,14 @@ class FakeForageClient extends ForageClient
     /** How many searches were actually sent, for the callers that avoid them. */
     public static int $searches = 0;
 
+    /** How many hits the last search asked for. */
+    public static ?int $limit = null;
+
     public function searchPostIds(string $query, int $limit = 200, ?string $distinct = null): ?array
     {
         self::$distinct = $distinct;
         self::$query = $query;
+        self::$limit = $limit;
         self::$searches++;
 
         return self::$ids;

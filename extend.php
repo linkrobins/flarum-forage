@@ -1,5 +1,6 @@
 <?php
 
+use Flarum\Api\Resource\ForumResource;
 use Flarum\Discussion\Search\DiscussionSearcher;
 use Flarum\Extend;
 use Flarum\Post\CommentPost;
@@ -10,6 +11,7 @@ use Flarum\Settings\Event\Saved;
 use LinkRobins\Forage\Api\Controller\RelatedController;
 use LinkRobins\Forage\Api\Controller\RetryController;
 use LinkRobins\Forage\Api\Controller\StatusController;
+use LinkRobins\Forage\Api\ForumFields;
 use LinkRobins\Forage\Api\RelatedThrottler;
 use LinkRobins\Forage\Console\ReindexCommand;
 use LinkRobins\Forage\Listener\ExchangeSetupToken;
@@ -31,6 +33,13 @@ return [
     (new Extend\Frontend('forum'))
         ->js(__DIR__.'/js/dist/forum.js')
         ->css(__DIR__.'/less/forum.less'),
+
+    /*
+     * Whether related discussions can be answered at all, so a forum with no
+     * key does not ask on every discussion page for a list that cannot exist.
+     */
+    (new Extend\ApiResource(ForumResource::class))
+        ->fields(ForumFields::class),
 
     new Extend\Locales(__DIR__.'/locale'),
 

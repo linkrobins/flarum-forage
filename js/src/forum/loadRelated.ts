@@ -8,6 +8,20 @@ export interface RelatedDiscussion {
 }
 
 /**
+ * Whether this forum can answer at all.
+ *
+ * A forum with no key, a lapsed plan or a tenant still provisioning would
+ * answer every one of these requests with an empty list, so the panels do not
+ * ask: the boolean rides along on the forum payload the page already loaded,
+ * and saves a full Flarum boot per discussion view and per pause in the
+ * composer. Read at render time, never in an initializer, because app.forum is
+ * built after those run.
+ */
+export function relatedEnabled(): boolean {
+  return !!app.forum?.attribute('forageRelated');
+}
+
+/**
  * Ask the forum for discussions like something.
  *
  * Always resolves, never rejects, and never raises an alert: this is a panel

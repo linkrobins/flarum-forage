@@ -30,6 +30,18 @@ class RelatedDiscussions
     public const COMPOSER_LIMIT = 3;
 
     /**
+     * How many candidate posts to ask the search server for.
+     *
+     * Far fewer than search itself asks for. Search pages through its hits, so
+     * its ceiling is a real one; this shows five at most and only needs enough
+     * headroom that visibility filtering cannot empty the list. Every candidate
+     * is also carried into an IN clause on every discussion page view, and kept
+     * in the cached list for a day, so the smaller number is the cheaper one in
+     * both places.
+     */
+    public const CANDIDATE_HITS = 50;
+
+    /**
      * Shorter titles than this are not worth a round trip.
      *
      * "Help" and "bug" match half a forum, so the suggestions would be noise
@@ -163,7 +175,7 @@ class RelatedDiscussions
 
         $ids = $this->client->searchPostIds(
             $query,
-            ForageResults::MAX_HITS,
+            self::CANDIDATE_HITS,
             ForageResults::PER_DISCUSSION
         );
 
