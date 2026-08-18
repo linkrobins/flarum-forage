@@ -99,6 +99,13 @@
   .ForageRelated-item:first-child {
     padding-top: 0;
   }
+
+  // The row divider is the panel's surface colour, which is also core's modal
+  // body colour, so on this surface it disappeared. Draw it against the modal
+  // instead.
+  .ForageRelated-item + .ForageRelated-item {
+    border-top-color: var(--body-bg);
+  }
 }
 
 // The composer's copy of the same idea. Tighter, because it is interrupting.
