@@ -61,6 +61,23 @@ class ForageResults
             return null;
         }
 
+        return $this->filterVisible($actor, $ids);
+    }
+
+    /**
+     * The subset of $ids this actor may read, still in the order given.
+     *
+     * Split out from visiblePosts because related discussions caches the search
+     * server's answer: the candidates are the same for everybody and worth
+     * keeping, while who may see them is not and has to be worked out again on
+     * every request. Caching a filtered list instead would serve one member's
+     * permissions to the next one.
+     *
+     * @param list<int> $ids
+     * @return array<int, int> post id => discussion id
+     */
+    public function filterVisible(User $actor, array $ids): array
+    {
         if ($ids === []) {
             return [];
         }

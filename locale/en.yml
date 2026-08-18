@@ -6,6 +6,18 @@ linkrobins-forage:
       Forage sets up your search server's connection for you and starts indexing
       your posts. Leave it blank to go back to your forum's own search.
 
+    related_discussion_label: Show related discussions under each thread
+    related_discussion_help: >
+      Adds a short list of other discussions like the one being read, at the
+      bottom of the page. Turn it off if you'd rather leave the end of a thread
+      clear.
+
+    related_composer_label: Suggest similar discussions while someone writes
+    related_composer_help: >
+      When a member starts a new discussion, shows a few existing ones with
+      similar titles under the title box. It's only a suggestion: it never
+      stops anyone posting, and they can hide it.
+
     unconfigured: >
       Paste your Forage key below to turn on hosted search. Get it from your
       linkrobins.com dashboard → Forage. Until then your forum keeps using its
@@ -66,3 +78,12 @@ linkrobins-forage:
       Your search server is holding {indexed} posts, which is the limit on your
       plan ({cap}). Newer posts aren't being added, so they won't turn up in
       search. Upgrading your plan raises the limit.
+
+  forum:
+    related_heading: Related Discussions
+    related_replies: "{count, plural, one {# reply} other {# replies}}"
+    related_more: See more
+    related_none: Nothing else here looks like this one yet.
+
+    composer_heading: Similar Discussions
+    composer_dismiss: Hide these suggestions

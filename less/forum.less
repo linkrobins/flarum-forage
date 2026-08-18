@@ -1,0 +1,213 @@
+// Related discussions.
+//
+// Deliberately quiet: this sits under somebody else's thread and beside
+// somebody else's composer, so it borrows the theme's own surface and muted
+// text rather than introducing a colour of its own. Nothing here is branded:
+// a forum owner paid for search, not for a logo on their discussion pages.
+//
+// Colours come through CSS custom properties, never LESS variables. Flarum 2.0
+// compiles an extension's LESS without core's variables in scope, so an @-name
+// here is not a wrong colour, it is a compile error that takes the whole forum
+// frontend down with it. Custom properties also follow the reader's light or
+// dark mode without this file knowing which is on.
+
+// A footer, not a card. A filled block across the content width competes with
+// the reply prompt directly above it, which is the thing a reader should be
+// clicking. A rule and some air say "there is more this way" quietly enough.
+.ForageRelated {
+  margin: 30px 0 0;
+  padding: 20px 0 0;
+  border-top: 1px solid var(--control-bg);
+
+  // Not uppercased. It was carrying a filled card before, where a small loud
+  // label had something to sit on; on the open page it just shouts.
+  &-heading {
+    margin: 0 0 10px;
+    font-size: calc(0.95rem * var(--lr-ui-scale, 1));
+    font-weight: 600;
+    color: var(--muted-color);
+  }
+
+  &-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &-item {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 6px 0;
+
+    // On a phone the meta held enough room on the right to wrap every title,
+    // and squeezed the ones carrying a reply count into half a column. It goes
+    // underneath instead, so the row reads down the page rather than across it
+    // and the title gets the full width. Core's own discussion list stacks the
+    // same way on a small screen.
+    @media (max-width: 767.98px) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 2px;
+      padding: 10px 0;
+    }
+
+    // Against the panel's own surface, which is what core separates lists
+    // with in the other direction.
+    & + & {
+      border-top: 1px solid var(--control-bg);
+    }
+  }
+
+  // A discussion title is reading text, so it scales with the reader's text
+  // size rather than the chrome's.
+  &-link {
+    flex: 1 1 auto;
+    font-size: calc(1rem * var(--lr-text-scale, 1));
+    color: var(--link-color);
+  }
+
+  &-meta {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 6px;
+    font-size: calc(0.85rem * var(--lr-ui-scale, 1));
+    color: var(--muted-color);
+    white-space: nowrap;
+  }
+
+  &-dot {
+    opacity: 0.6;
+  }
+
+  // A control, drawn like one. It was a muted text link, which is what made it
+  // read as a way off the page rather than a way to see the rest.
+  &-more {
+    margin-top: 14px;
+  }
+}
+
+// The rest of the list, on its own surface.
+.ForageRelatedModal {
+  .Modal-body {
+    // Fifteen rows is taller than a short window, and a modal that runs off the
+    // screen has no way back to its own close button.
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .ForageRelated-item:first-child {
+    padding-top: 0;
+  }
+
+  // The row divider is the panel's surface colour, which is also core's modal
+  // body colour, so on this surface it disappeared. Draw it against the modal
+  // instead.
+  .ForageRelated-item + .ForageRelated-item {
+    border-top-color: var(--body-bg);
+  }
+}
+
+// The composer's copy of the same idea. Tighter, because it is interrupting.
+//
+// It FLOATS, like a typeahead under the field that asked for it, rather than
+// sitting in the flow. Suggestions arrive on a pause in typing and leave again
+// on the next keystroke, and in the flow that slid the whole post down and back
+// while somebody was writing in it. Nothing moves now.
+
+// The item core wraps around this one is meant to hold a control, so it comes
+// with a row's worth of layout: an inline-block that shrinks to its contents on
+// a desktop, and a padded, bordered row of its own on a phone. This one holds
+// something absolutely positioned, so it should take a full-width line and draw
+// nothing at all.
+.ComposerBody-header > li:has(> .ForageComposerRelated) {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.ForageComposerRelated {
+  position: relative;
+  width: 100%;
+
+  &-panel {
+    position: absolute;
+    top: 2px;
+    left: 0;
+    right: 0;
+    // A hint anchored under the field, not a sheet across the composer. Wide
+    // enough for a discussion title, and on a phone the right edge reaches
+    // first and this does nothing.
+    max-width: 460px;
+    // Above the editor it covers, below anything core layers over the whole
+    // composer.
+    z-index: 3;
+    padding: 10px 12px;
+    // Opaque, and lifted the way core lifts a dropdown: this one is over
+    // somebody's draft, so text must not show through it.
+    background: var(--body-bg);
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 6px var(--shadow-color);
+
+    // On a phone the composer's rows carry their own gutter and this one's
+    // does not, since the row it sits in was flattened above. Inset it by hand
+    // so the panel lines up with the title instead of touching both edges.
+    // Core's phone breakpoint, written out: its LESS variables are not in
+    // scope here, and neither is @phone.
+    @media (max-width: 767.98px) {
+      left: 15px;
+      right: 15px;
+    }
+  }
+
+  &-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  &-heading {
+    font-size: calc(0.85rem * var(--lr-ui-scale, 1));
+    font-weight: 600;
+    color: var(--muted-color);
+  }
+
+  // Icon only, and quiet: it sits next to a heading, not next to the titles
+  // somebody is here to read.
+  // Core sizes an icon button for a toolbar: 36px wide with a 16px glyph, the
+  // same as the composer's own close two rows above this one. Two X's that
+  // size and that close together read as a pair, so this one is smaller, which
+  // is also what it is: dismissing a hint, not closing the draft.
+  &-dismiss {
+    width: auto;
+    padding: 0;
+    margin: -2px -2px -2px 0;
+    color: var(--muted-color);
+
+    .Button-icon {
+      font-size: calc(0.8rem * var(--lr-ui-scale, 1));
+    }
+
+    &:hover,
+    &:focus {
+      color: var(--text-color);
+    }
+  }
+
+  &-list {
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      padding: 3px 0;
+    }
+  }
+
+  &-link {
+    font-size: calc(0.95rem * var(--lr-text-scale, 1));
+  }
+}

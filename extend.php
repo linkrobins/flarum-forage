@@ -1,5 +1,6 @@
 <?php
 
+use Flarum\Api\Resource\ForumResource;
 use Flarum\Discussion\Search\DiscussionSearcher;
 use Flarum\Extend;
 use Flarum\Post\CommentPost;
@@ -7,11 +8,16 @@ use Flarum\Post\Filter\PostSearcher;
 use Flarum\Search\Database\DatabaseSearchDriver;
 use Flarum\Settings\Event\Deserializing;
 use Flarum\Settings\Event\Saved;
+use Flarum\Settings\Event\Serializing;
+use LinkRobins\Forage\Api\Controller\RelatedController;
 use LinkRobins\Forage\Api\Controller\RetryController;
 use LinkRobins\Forage\Api\Controller\StatusController;
+use LinkRobins\Forage\Api\ForumFields;
+use LinkRobins\Forage\Api\RelatedThrottler;
 use LinkRobins\Forage\Console\ReindexCommand;
 use LinkRobins\Forage\Listener\ExchangeSetupToken;
 use LinkRobins\Forage\Listener\HideKeysFromAdmin;
+use LinkRobins\Forage\Listener\NormalizeSwitches;
 use LinkRobins\Forage\Listener\SyncIndex;
 use LinkRobins\Forage\Search\DiscussionFulltextFilter;
 use LinkRobins\Forage\Search\PostFulltextFilter;
@@ -20,6 +26,22 @@ use LinkRobins\Forage\Search\PostIndexer;
 return [
     (new Extend\Frontend('admin'))
         ->js(__DIR__.'/js/dist/admin.js'),
+
+    /*
+     * The forum bundle exists for related discussions and nothing else. Search
+     * itself needs no frontend at all: it is answered by replacing a filter on
+     * the driver, so Flarum's own search box keeps working unchanged.
+     */
+    (new Extend\Frontend('forum'))
+        ->js(__DIR__.'/js/dist/forum.js')
+        ->css(__DIR__.'/less/forum.less'),
+
+    /*
+     * Whether related discussions can be answered at all, so a forum with no
+     * key does not ask on every discussion page for a list that cannot exist.
+     */
+    (new Extend\ApiResource(ForumResource::class))
+        ->fields(ForumFields::class),
 
     new Extend\Locales(__DIR__.'/locale'),
 
@@ -64,11 +86,20 @@ return [
     (new Extend\Event())
         ->subscribe(SyncIndex::class)
         ->listen(Saved::class, ExchangeSetupToken::class)
-        ->listen(Deserializing::class, HideKeysFromAdmin::class),
+        ->listen(Deserializing::class, HideKeysFromAdmin::class)
+        ->listen(Serializing::class, NormalizeSwitches::class),
 
     (new Extend\Routes('api'))
         ->get('/linkrobins-forage/status', 'linkrobins-forage.status', StatusController::class)
-        ->post('/linkrobins-forage/retry', 'linkrobins-forage.retry', RetryController::class),
+        ->post('/linkrobins-forage/retry', 'linkrobins-forage.retry', RetryController::class)
+        ->get('/linkrobins-forage/related', 'linkrobins-forage.related', RelatedController::class),
+
+    /*
+     * Related discussions is the one route a member can drive at will, through
+     * the composer. Everything else here is admin-only or runs on the queue.
+     */
+    (new Extend\ThrottleApi())
+        ->set('linkrobins-forage.related', RelatedThrottler::class),
 
     (new Extend\Console())
         ->command(ReindexCommand::class),

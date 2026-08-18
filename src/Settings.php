@@ -25,6 +25,16 @@ final class Settings
     public const ADMIN_KEY = self::PREFIX.'admin_key';
     public const POST_CAP = self::PREFIX.'post_cap';
 
+    /**
+     * The two panels an admin can switch off.
+     *
+     * Unset means on, so a forum that upgrades into these gets them without
+     * having to go and find a switch, and an admin who does not want one is
+     * one click from turning it off.
+     */
+    public const RELATED_DISCUSSION = self::PREFIX.'related_discussion';
+    public const RELATED_COMPOSER = self::PREFIX.'related_composer';
+
     /** Status shown in the admin banner: ok | provisioning | invalid | error | unconfigured. */
     public const STATUS = self::PREFIX.'status';
     public const STATUS_DETAIL = self::PREFIX.'status_detail';
@@ -101,6 +111,35 @@ final class Settings
     public function isConfigured(): bool
     {
         return $this->endpoint() !== '' && $this->adminKey() !== '';
+    }
+
+    /** Should a discussion offer a list of others like it? */
+    public function relatedUnderDiscussion(): bool
+    {
+        return $this->switchedOn(self::RELATED_DISCUSSION);
+    }
+
+    /** Should the composer say when a title looks like one already here? */
+    public function relatedInComposer(): bool
+    {
+        return $this->switchedOn(self::RELATED_COMPOSER);
+    }
+
+    /**
+     * A switch nobody has touched is on.
+     *
+     * Absent and off have to be told apart, and only absent is null: what a
+     * saved-off switch leaves behind depends on the driver, since Flarum hands
+     * the JSON false straight to the settings table. MySQL keeps '0', and a
+     * PDO string bind can leave ''. Casting covers all of them, and the null
+     * check above it is what makes a forum that has never opened the page get
+     * the panels anyway.
+     */
+    private function switchedOn(string $key): bool
+    {
+        $value = $this->settings->get($key);
+
+        return $value === null ? true : (bool) $value;
     }
 
     /** Can we run a search? Searching needs less than indexing does. */
