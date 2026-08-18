@@ -23,7 +23,7 @@ app.initializers.add('linkrobins/forage', () => {
       return;
     }
 
-    vnode.children.push(m(RelatedPanel, { discussionId: Number(this.discussion.id()), title: String(this.discussion.title() || '') }));
+    vnode.children.push(m(RelatedPanel, { discussionId: Number(this.discussion.id()) }));
   });
 
   extend('flarum/forum/components/DiscussionComposer', 'headerItems', function (this: any, items: ItemList<Mithril.Children>) {

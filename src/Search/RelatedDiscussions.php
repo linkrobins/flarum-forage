@@ -27,6 +27,17 @@ class RelatedDiscussions
     /** Below a discussion. Enough to be useful, short enough to scan. */
     public const FOOTER_LIMIT = 5;
 
+    /**
+     * What "more like this" asks for.
+     *
+     * The rest of what the five-row list had to cut, fetched in place rather
+     * than handed to the search box: the candidates are already cached, so
+     * this costs the search server nothing, and it cannot answer with the
+     * discussion the member is reading, which a search for the same title
+     * always does.
+     */
+    public const EXPANDED_LIMIT = 15;
+
     /** While composing. Deliberately fewer: this one interrupts. */
     public const COMPOSER_LIMIT = 3;
 

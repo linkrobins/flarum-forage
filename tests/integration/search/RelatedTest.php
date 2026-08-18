@@ -52,11 +52,16 @@ class RelatedTest extends TestCase
                 ['id' => 2, 'title' => 'Beta', 'created_at' => '2026-01-01 00:00:00', 'last_posted_at' => '2026-01-01 00:00:00', 'user_id' => 1, 'first_post_id' => 2, 'comment_count' => 1, 'slug' => 'beta', 'is_private' => 0],
                 // Private, so nobody may read it without an extension that says otherwise.
                 ['id' => 3, 'title' => 'Secret', 'created_at' => '2026-01-01 00:00:00', 'last_posted_at' => '2026-01-01 00:00:00', 'user_id' => 1, 'first_post_id' => 3, 'comment_count' => 1, 'slug' => 'secret', 'is_private' => 1],
+                // Two more, so asking for a longer list has something to give.
+                ['id' => 4, 'title' => 'Gamma', 'created_at' => '2026-01-01 00:00:00', 'last_posted_at' => '2026-01-01 00:00:00', 'user_id' => 1, 'first_post_id' => 4, 'comment_count' => 1, 'slug' => 'gamma', 'is_private' => 0],
+                ['id' => 5, 'title' => 'Delta', 'created_at' => '2026-01-01 00:00:00', 'last_posted_at' => '2026-01-01 00:00:00', 'user_id' => 1, 'first_post_id' => 5, 'comment_count' => 1, 'slug' => 'delta', 'is_private' => 0],
             ],
             'posts' => [
                 ['id' => 1, 'discussion_id' => 1, 'number' => 1, 'created_at' => '2026-01-01 00:00:00', 'user_id' => 1, 'type' => 'comment', 'content' => '<t><p>apples</p></t>', 'is_private' => 0],
                 ['id' => 2, 'discussion_id' => 2, 'number' => 1, 'created_at' => '2026-01-01 00:00:00', 'user_id' => 1, 'type' => 'comment', 'content' => '<t><p>bananas</p></t>', 'is_private' => 0],
                 ['id' => 3, 'discussion_id' => 3, 'number' => 1, 'created_at' => '2026-01-01 00:00:00', 'user_id' => 1, 'type' => 'comment', 'content' => '<t><p>cherries</p></t>', 'is_private' => 1],
+                ['id' => 4, 'discussion_id' => 4, 'number' => 1, 'created_at' => '2026-01-01 00:00:00', 'user_id' => 1, 'type' => 'comment', 'content' => '<t><p>damsons</p></t>', 'is_private' => 0],
+                ['id' => 5, 'discussion_id' => 5, 'number' => 1, 'created_at' => '2026-01-01 00:00:00', 'user_id' => 1, 'type' => 'comment', 'content' => '<t><p>elderberries</p></t>', 'is_private' => 0],
             ],
         ]);
 
@@ -258,6 +263,40 @@ class RelatedTest extends TestCase
 
         $this->assertSame(RelatedDiscussions::CANDIDATE_HITS, FakeForageClient::$limit);
         $this->assertLessThan(ForageResults::MAX_HITS, FakeForageClient::$limit);
+    }
+
+    /**
+     * "More like this" asks the same question with a bigger answer, so the
+     * five-row footer is not the last word on a forum with more to say.
+     *
+     * @test
+     */
+    #[Test]
+    public function the_list_can_be_asked_for_more_than_the_footer_shows(): void
+    {
+        FakeForageClient::$ids = [1, 4, 5];
+
+        $this->assertSame([1, 4, 5], $this->ids($this->related(['discussion' => 2, 'limit' => 15])));
+        $this->assertSame([1, 4], $this->ids($this->related(['discussion' => 2, 'limit' => 2])));
+        $this->assertSame([1], $this->ids($this->related(['discussion' => 2, 'limit' => 1])));
+    }
+
+    /**
+     * The one number a member controls on a route that reaches the search
+     * server, so it is bounded here rather than trusted.
+     *
+     * @test
+     */
+    #[Test]
+    public function the_limit_is_capped_however_it_is_asked_for(): void
+    {
+        FakeForageClient::$ids = [1, 2];
+
+        foreach (['9999', '-3', 'lots', '0'] as $limit) {
+            $rows = $this->related(['discussion' => 2, 'limit' => $limit])['data'];
+
+            $this->assertLessThanOrEqual(RelatedDiscussions::EXPANDED_LIMIT, count($rows), "limit={$limit}");
+        }
     }
 
     /**

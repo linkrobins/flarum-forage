@@ -19,12 +19,12 @@
   padding: 20px 0 0;
   border-top: 1px solid var(--control-bg);
 
+  // Not uppercased. It was carrying a filled card before, where a small loud
+  // label had something to sit on; on the open page it just shouts.
   &-heading {
     margin: 0 0 10px;
-    font-size: calc(0.9rem * var(--lr-ui-scale, 1));
+    font-size: calc(0.95rem * var(--lr-ui-scale, 1));
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
     color: var(--muted-color);
   }
 
@@ -71,7 +71,9 @@
   &-more {
     display: inline-block;
     margin-top: 12px;
+    padding: 0;
     font-size: calc(0.85rem * var(--lr-ui-scale, 1));
+    font-weight: 400;
     color: var(--muted-color);
 
     &:hover,

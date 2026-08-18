@@ -36,6 +36,13 @@ class RelatedController implements RequestHandlerInterface
 
         $discussionId = $this->intParam($params, 'discussion');
 
+        // Bounded here, not trusted from the query string: this is the only
+        // number a member controls on a route that reaches the search server.
+        $limit = min(
+            RelatedDiscussions::EXPANDED_LIMIT,
+            max(1, $this->intParam($params, 'limit') ?: RelatedDiscussions::FOOTER_LIMIT)
+        );
+
         if ($discussionId > 0) {
             // Scoped before it is used as a query: an id someone cannot read is
             // treated as an id that is not there, so the endpoint cannot be used
@@ -44,7 +51,7 @@ class RelatedController implements RequestHandlerInterface
 
             $discussions = $source === null
                 ? []
-                : $this->related->forDiscussion($actor, $source);
+                : $this->related->forDiscussion($actor, $source, $limit);
         } else {
             $discussions = $this->related->forQuery($actor, $this->stringParam($params, 'q'));
         }

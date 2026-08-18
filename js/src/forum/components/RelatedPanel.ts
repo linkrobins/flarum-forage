@@ -1,4 +1,5 @@
 import app from 'flarum/forum/app';
+import Button from 'flarum/common/components/Button';
 import Component from 'flarum/common/Component';
 import Link from 'flarum/common/components/Link';
 import humanTime from 'flarum/common/helpers/humanTime';
@@ -8,9 +9,11 @@ import type Mithril from 'mithril';
 
 export interface RelatedPanelAttrs {
   discussionId: number;
-  /** The title being read, which is also what "more like this" searches for. */
-  title: string;
 }
+
+/** What the footer shows, and what "more like this" asks for. Both bounded server side. */
+const FOOTER_LIMIT = 5;
+const EXPANDED_LIMIT = 15;
 
 /**
  * The "related discussions" list under a discussion.
@@ -30,6 +33,11 @@ export default class RelatedPanel extends Component<RelatedPanelAttrs> {
    * Without this the panel would keep showing the previous thread's relatives.
    */
   loadedFor: number | null = null;
+
+  /** Whether the list has already been expanded, and whether it is expanding. */
+  expanded = false;
+
+  expanding = false;
 
   oninit(vnode: Mithril.Vnode<RelatedPanelAttrs, this>) {
     super.oninit(vnode);
@@ -101,13 +109,51 @@ export default class RelatedPanel extends Component<RelatedPanelAttrs> {
     return parts.flatMap((part, i) => (i === 0 ? [part] : [m('span', { className: 'ForageRelated-dot' }, '·'), part]));
   }
 
-  /** The forum's own search, for the rest of what this panel had to cut. */
+  /**
+   * The rest of what five rows had to cut, fetched in place.
+   *
+   * Not a link to the forum's search for the same title, which was the first
+   * shape of this: that search always answers with the discussion being read,
+   * at the top, because it is the best match for its own title. Asking here
+   * cannot do that, and the candidates behind it are already cached, so it
+   * costs the search server nothing.
+   */
   more(): Mithril.Children {
-    return m(
-      Link,
-      { className: 'ForageRelated-more', href: app.route('index', { q: this.attrs.title }) },
-      app.translator.trans('linkrobins-forage.forum.related_more')
-    );
+    if (this.expanded || this.discussions.length < FOOTER_LIMIT) {
+      return null;
+    }
+
+    return m(Button, {
+      className: 'Button Button--link ForageRelated-more',
+      loading: this.expanding,
+      onclick: () => this.expand(),
+      label: app.translator.trans('linkrobins-forage.forum.related_more'),
+    });
+  }
+
+  expand() {
+    const discussionId = this.attrs.discussionId;
+
+    this.expanding = true;
+
+    loadRelated({ discussion: discussionId, limit: EXPANDED_LIMIT }).then((discussions) => {
+      this.expanding = false;
+
+      // Navigated on while this was in the air.
+      if (this.loadedFor !== discussionId) {
+        return;
+      }
+
+      // Marked expanded either way: a forum with nothing more to give should
+      // not keep offering.
+      this.expanded = true;
+
+      if (discussions.length) {
+        this.discussions = discussions;
+      }
+
+      m.redraw();
+    });
   }
 
   load(discussionId: number) {
@@ -115,6 +161,8 @@ export default class RelatedPanel extends Component<RelatedPanelAttrs> {
     // start the same load again.
     this.loadedFor = discussionId;
     this.discussions = [];
+    this.expanded = false;
+    this.expanding = false;
 
     if (!discussionId) {
       return;
