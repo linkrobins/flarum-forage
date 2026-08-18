@@ -300,6 +300,45 @@ class RelatedTest extends TestCase
     }
 
     /**
+     * A thread with exactly as many relatives as the footer shows must not be
+     * offered a window holding the same rows. The count alone cannot tell that
+     * apart from a thread with fifty, so the answer says.
+     *
+     * @test
+     */
+    #[Test]
+    public function the_answer_says_whether_anything_was_cut(): void
+    {
+        // Five candidates, of which four are visible and one is the source, so
+        // the footer's five is not reached and nothing was cut.
+        FakeForageClient::$ids = [1, 4, 5];
+
+        $this->assertFalse($this->related(['discussion' => 2])['meta']['hasMore']);
+
+        // Now ask for fewer than there are.
+        $this->assertTrue($this->related(['discussion' => 2, 'limit' => 2])['meta']['hasMore']);
+        $this->assertCount(2, $this->related(['discussion' => 2, 'limit' => 2])['data'], 'the extra one is not returned');
+    }
+
+    /**
+     * The composer shows fewer than the footer because it interrupts, and asking
+     * without a limit must keep that difference rather than inherit the
+     * footer's.
+     *
+     * @test
+     */
+    #[Test]
+    public function the_composer_keeps_its_own_smaller_default(): void
+    {
+        FakeForageClient::$ids = [1, 2, 4, 5];
+
+        $this->assertCount(
+            RelatedDiscussions::COMPOSER_LIMIT,
+            $this->related(['q' => 'apples'])['data']
+        );
+    }
+
+    /**
      * @param array<string, mixed> $params
      * @return array<string, mixed>
      */

@@ -10,9 +10,6 @@ export interface RelatedModalAttrs {
   discussionId: number;
 }
 
-/** What the footer shows, and what this asks for. Both bounded server side. */
-const EXPANDED_LIMIT = 15;
-
 /**
  * The rest of what the footer had to cut.
  *
@@ -29,8 +26,12 @@ export default class RelatedModal extends Modal<RelatedModalAttrs & any> {
   oninit(vnode: Mithril.Vnode<RelatedModalAttrs & any, this>) {
     super.oninit(vnode);
 
-    loadRelated({ discussion: this.attrs.discussionId, limit: EXPANDED_LIMIT }).then((discussions) => {
-      this.discussions = discussions;
+    // The ceiling comes from the forum payload rather than a copy here, so
+    // there is one number and the server owns it.
+    const limit = Number(app.forum.attribute('forageRelatedExpandedLimit')) || 15;
+
+    loadRelated({ discussion: this.attrs.discussionId, limit }).then((answer) => {
+      this.discussions = answer.discussions;
       this.loadingList = false;
       m.redraw();
     });

@@ -10,6 +10,7 @@
 namespace LinkRobins\Forage\Api;
 
 use Flarum\Api\Schema;
+use LinkRobins\Forage\Search\RelatedDiscussions;
 use LinkRobins\Forage\Settings;
 
 /**
@@ -42,6 +43,17 @@ class ForumFields
 
             Schema\Boolean::make('forageRelatedComposer')
                 ->get(fn (): bool => $this->on($this->settings->relatedInComposer(...))),
+
+            // The two numbers the frontend would otherwise keep its own copies
+            // of. Both are enforced here whatever the frontend believes, so a
+            // stale copy in the bundle was never dangerous, only silent: lower
+            // the footer's limit in PHP and the old frontend would have gone on
+            // offering a longer list that the server had already cut.
+            Schema\Integer::make('forageRelatedExpandedLimit')
+                ->get(fn (): int => RelatedDiscussions::EXPANDED_LIMIT),
+
+            Schema\Integer::make('forageRelatedMinQueryLength')
+                ->get(fn (): int => RelatedDiscussions::MIN_QUERY_LENGTH),
         ];
     }
 

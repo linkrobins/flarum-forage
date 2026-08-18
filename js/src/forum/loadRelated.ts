@@ -28,6 +28,12 @@ export function relatedInComposer(): boolean {
   return !!app.forum?.attribute('forageRelatedComposer');
 }
 
+export interface RelatedAnswer {
+  discussions: RelatedDiscussion[];
+  /** Whether the server cut anything off the end of this list. */
+  hasMore: boolean;
+}
+
 /**
  * Ask the forum for discussions like something.
  *
@@ -36,14 +42,14 @@ export function relatedInComposer(): boolean {
  * member who tripped the rate limit should all end in the same quiet nothing.
  * The default handler would put a red banner over the page instead.
  */
-export default function loadRelated(params: Record<string, string | number>): Promise<RelatedDiscussion[]> {
+export default function loadRelated(params: Record<string, string | number>): Promise<RelatedAnswer> {
   return app
-    .request<{ data: RelatedDiscussion[] }>({
+    .request<{ data: RelatedDiscussion[]; meta?: { hasMore?: boolean } }>({
       method: 'GET',
       url: app.forum.attribute('apiUrl') + '/linkrobins-forage/related',
       params,
       errorHandler: () => {},
     })
-    .then((body) => body?.data ?? [])
-    .catch(() => []);
+    .then((body) => ({ discussions: body?.data ?? [], hasMore: !!body?.meta?.hasMore }))
+    .catch(() => ({ discussions: [], hasMore: false }));
 }

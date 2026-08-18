@@ -14,8 +14,14 @@ export interface ComposerRelatedAttrs {
 /** Long enough that it does not fire mid-word, short enough to feel immediate. */
 const DEBOUNCE_MS = 400;
 
-/** Matches MIN_QUERY_LENGTH on the server; short titles match half a forum. */
-const MIN_LENGTH = 4;
+/**
+ * The server's minimum, read from the forum payload rather than kept in step by
+ * hand. Asking below it is answered with an empty list, so a stale copy here
+ * only ever meant a wasted round trip, silently.
+ */
+function minLength(): number {
+  return Number(app.forum?.attribute('forageRelatedMinQueryLength')) || 4;
+}
 
 /**
  * "Has this been asked before?" under the new-discussion title field.
@@ -198,21 +204,21 @@ export default class ComposerRelated extends Component<ComposerRelatedAttrs> {
   private schedule(title: string) {
     this.clear();
 
-    if (title.length < MIN_LENGTH) {
+    if (title.length < minLength()) {
       this.discussions = [];
 
       return;
     }
 
     this.timer = setTimeout(() => {
-      loadRelated({ q: title }).then((discussions) => {
+      loadRelated({ q: title }).then((answer) => {
         // Typing moved on while this was in the air.
         if (this.seen !== title) {
           return;
         }
 
-        this.discussions = discussions;
-        this.open = discussions.length > 0;
+        this.discussions = answer.discussions;
+        this.open = answer.discussions.length > 0;
         m.redraw();
       });
     }, DEBOUNCE_MS);

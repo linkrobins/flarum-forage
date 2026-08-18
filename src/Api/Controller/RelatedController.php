@@ -36,12 +36,22 @@ class RelatedController implements RequestHandlerInterface
 
         $discussionId = $this->intParam($params, 'discussion');
 
-        // Bounded here, not trusted from the query string: this is the only
+        // Each shape keeps its own default: five under a discussion, three in
+        // the composer, which interrupts and so shows fewer. Bounded here and
+        // not trusted from the query string either way, since this is the only
         // number a member controls on a route that reaches the search server.
+        $default = $discussionId > 0
+            ? RelatedDiscussions::FOOTER_LIMIT
+            : RelatedDiscussions::COMPOSER_LIMIT;
+
         $limit = min(
             RelatedDiscussions::EXPANDED_LIMIT,
-            max(1, $this->intParam($params, 'limit') ?: RelatedDiscussions::FOOTER_LIMIT)
+            max(1, $this->intParam($params, 'limit') ?: $default)
         );
+
+        // One more than asked for, so the answer can say whether there is
+        // anything past the edge without the caller guessing from the count.
+        $probe = $limit + 1;
 
         if ($discussionId > 0) {
             // Scoped before it is used as a query: an id someone cannot read is
@@ -51,12 +61,19 @@ class RelatedController implements RequestHandlerInterface
 
             $discussions = $source === null
                 ? []
-                : $this->related->forDiscussion($actor, $source, $limit);
+                : $this->related->forDiscussion($actor, $source, $probe);
         } else {
-            $discussions = $this->related->forQuery($actor, $this->stringParam($params, 'q'));
+            $discussions = $this->related->forQuery($actor, $this->stringParam($params, 'q'), $probe);
         }
 
+        $more = count($discussions) > $limit;
+        $discussions = array_slice($discussions, 0, $limit);
+
         return new JsonResponse([
+            // Whether anything was cut. The frontend cannot work this out from
+            // the row count: a thread with exactly five relatives and a thread
+            // with fifty both come back with five.
+            'meta' => ['hasMore' => $more],
             'data' => array_map(fn (Discussion $discussion): array => [
                 'id' => (int) $discussion->id,
                 'slug' => (string) $discussion->slug,

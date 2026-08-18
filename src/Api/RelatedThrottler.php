@@ -74,14 +74,28 @@ class RelatedThrottler
         $key = self::bucketKey($this->who($request), $discussion);
         $limit = $discussion ? self::PER_MINUTE_DISCUSSION : self::PER_MINUTE_QUERY;
 
-        // A fixed window, seeded once. add() sets the expiry and does nothing
-        // if the key is already there, and increment() carries the REMAINING
-        // time forward rather than restarting it, so the window runs sixty
-        // seconds from the first request of the window rather than being pushed
-        // along by every hit. Counting after the fact, from what increment
-        // returns, keeps this to two cache operations on a route that fires on
-        // every discussion page.
-        $this->cache->add($key, 0, self::WINDOW);
+        // Increment first, then give the window an expiry if this request is
+        // the one that opened it.
+        //
+        // Seeding with add() first looked tidier and had a trap in it. If the
+        // key expired between the add and the increment, increment() read an
+        // empty payload, whose remaining time is null, and put the counter back
+        // with `$raw['time'] ?? 0` seconds. Zero does not mean "expire now" to
+        // the file store: expiration() turns it into 9999999999, so the bucket
+        // was written to live effectively forever. It would then fill up over
+        // the life of the forum, cross the ceiling, and quietly take related
+        // discussions away from that member or that address until somebody
+        // cleared the cache. A narrow window, on a route that fires on every
+        // discussion page for as long as the forum runs.
+        //
+        // Incrementing a missing key writes the same permanent entry, so the
+        // put() below is what bounds it, whichever way the key came to exist.
+        // Three operations on the first request of a window, two after.
+        $hits = (int) $this->cache->increment($key);
+
+        if ($hits <= 1) {
+            $this->cache->put($key, $hits, self::WINDOW);
+        }
 
         // NOT atomic, and deliberately not pretending to be. Flarum hardwires
         // cache.store to the file store (Foundation\InstalledSite), whose
@@ -92,8 +106,6 @@ class RelatedThrottler
         // route, not a security boundary: the cost of a race is a request or
         // two over the line, and the cost of pretending otherwise is somebody
         // trusting it for something it cannot do.
-        $hits = (int) $this->cache->increment($key);
-
         return $hits > $limit ? true : null;
     }
 
