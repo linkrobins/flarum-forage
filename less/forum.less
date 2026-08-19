@@ -89,11 +89,19 @@
 
 // The rest of the list, on its own surface.
 .ForageRelatedModal {
-  .Modal-body {
-    // Fifteen rows is taller than a short window, and a modal that runs off the
-    // screen has no way back to its own close button.
-    max-height: 60vh;
-    overflow-y: auto;
+  // Only where the modal is a floating card. Fifteen rows is taller than a
+  // short window, and on a desktop an inner scroll keeps the heading and the
+  // close button in place while the list moves.
+  //
+  // NOT on a phone, where the modal is the page: core gives .Modal-content
+  // min-height 100dvh and scrolls .ModalManager around it, so a body capped at
+  // 60vh stopped the list two thirds of the way down the screen and left the
+  // rest of it empty, with a row cut in half at the boundary.
+  @media (min-width: 768px) {
+    .Modal-body {
+      max-height: 60vh;
+      overflow-y: auto;
+    }
   }
 
   .ForageRelated-item:first-child {
